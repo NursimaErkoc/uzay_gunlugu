@@ -1,0 +1,17 @@
+# Gizli ayarlar (API anahtarları, şifreler) - ASLA GitHub'a gitmemeli
+.env
+
+# Python sanal ortamı ve önbellek dosyaları
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Yerel veritabanı
+*.db
+
+# Editör / işletim sistemi dosyaları
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
