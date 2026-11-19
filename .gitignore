@@ -7,8 +7,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Yerel veritabanı
+# Yerel veritabanı ve önbellek
 *.db
+.onbellek/
 
 # Editör / işletim sistemi dosyaları
 .vscode/

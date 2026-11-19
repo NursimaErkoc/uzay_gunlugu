@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uzay Takvimi · Uzay Günlüğü</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="yildizlar" aria-hidden="true"></div>
+
+  <header class="ust">
+    <h1>🚀 Uzay Günlüğü</h1>
+    <nav class="menu">
+      <a href="index.html">📸 Günlük</a>
+      <a href="events.html" class="aktif">📅 Uzay Takvimi</a>
+    </nav>
+  </header>
+
+  <main class="icerik">
+    <section class="kart">
+      <!-- Ay seçici: ◀ Aralık 2026 ▶ -->
+      <div class="ay-secici">
+        <button id="onceki-ay" class="ok-butonu" aria-label="Önceki ay">◀</button>
+        <h2 id="ay-basligi">…</h2>
+        <button id="sonraki-ay" class="ok-butonu" aria-label="Sonraki ay">▶</button>
+      </div>
+
+      <!-- Görünüm seçici: Liste / Takvim -->
+      <div class="gorunum-secici" id="gorunum-secici">
+        <button class="gorunum aktif" data-gorunum="liste">☰ Liste</button>
+        <button class="gorunum" data-gorunum="takvim">▦ Takvim</button>
+      </div>
+
+      <!-- Filtreler -->
+      <div class="filtreler" id="filtreler">
+        <button class="filtre aktif" data-tur="hepsi">Hepsi</button>
+        <button class="filtre" data-tur="gokyuzu">🔭 Gökyüzü</button>
+        <button class="filtre" data-tur="firlatma">🚀 Fırlatmalar</button>
+        <button class="filtre" data-tur="etkinlik">🛰️ Uzay Etkinlikleri</button>
+      </div>
+      <label class="secenek">
+        <input type="checkbox" id="starlink-goster"> Starlink fırlatmalarını da göster
+      </label>
+      <p class="aciklama-notu">Saatler Türkiye saatine (UTC+3) göredir.</p>
+    </section>
+
+    <div id="olay-listesi">
+      <p class="yukleniyor">Takvim hazırlanıyor... 🗓️<br><small>İlk açılışta çeviriler yüzünden biraz sürebilir.</small></p>
+    </div>
+  </main>
+
+  <!-- Ayrıntı penceresi: takvimde bir olaya tıklayınca açılır (<dialog> = tarayıcının hazır pencere elemanı) -->
+  <dialog id="detay" class="detay-penceresi">
+    <button class="kapat" id="detay-kapat" aria-label="Kapat">✕</button>
+    <div id="detay-icerik"></div>
+  </dialog>
+
+  <footer class="alt">
+    Veriler: <a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">Launch Library 2</a> ·
+    Gökyüzü hesaplamaları: <a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noopener">Astronomy Engine</a>
+  </footer>
+
+  <script src="events.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+[
+  {"ad": "Kuadrantid", "tepe_ay": 1, "tepe_gun": 3, "saatlik": 110, "kaynak": "2003 EH1 asteroidi"},
+  {"ad": "Lirid", "tepe_ay": 4, "tepe_gun": 22, "saatlik": 18, "kaynak": "C/1861 G1 (Thatcher) kuyruklu yıldızı"},
+  {"ad": "Eta Akuarid", "tepe_ay": 5, "tepe_gun": 6, "saatlik": 50, "kaynak": "Halley kuyruklu yıldızı"},
+  {"ad": "Perseid", "tepe_ay": 8, "tepe_gun": 12, "saatlik": 100, "kaynak": "109P/Swift-Tuttle kuyruklu yıldızı"},
+  {"ad": "Drakonid", "tepe_ay": 10, "tepe_gun": 8, "saatlik": 10, "kaynak": "21P/Giacobini-Zinner kuyruklu yıldızı"},
+  {"ad": "Orionid", "tepe_ay": 10, "tepe_gun": 21, "saatlik": 20, "kaynak": "Halley kuyruklu yıldızı"},
+  {"ad": "Leonid", "tepe_ay": 11, "tepe_gun": 17, "saatlik": 15, "kaynak": "55P/Tempel-Tuttle kuyruklu yıldızı"},
+  {"ad": "Geminid", "tepe_ay": 12, "tepe_gun": 14, "saatlik": 150, "kaynak": "3200 Phaethon asteroidi"},
+  {"ad": "Ursid", "tepe_ay": 12, "tepe_gun": 22, "saatlik": 10, "kaynak": "8P/Tuttle kuyruklu yıldızı"}
+]

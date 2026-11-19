@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 
 from app.config import PROJE_KLASORU
-from app.services import facts, nasa, news
+from app.services import events, facts, nasa, news
 
 app = FastAPI(
     title="Uzay Günlüğü API",
@@ -64,6 +64,26 @@ async def haberler(
         return await news.son_haberler(adet)
     except news.HaberHatasi as hata:
         raise HTTPException(status_code=502, detail=str(hata))
+
+
+@app.get("/api/events", tags=["Takvim"])
+async def ayin_olaylari(
+    ay: str | None = Query(
+        default=None,
+        pattern=r"^\d{4}-(0[1-9]|1[0-2])$",   # "YYYY-AA" biçimi (regex)
+        description="Hangi ay? Örn. 2026-12. Boş bırakırsan bu ay.",
+        examples=["2026-12"],
+    ),
+):
+    """Ayın uzay olayları: gökyüzü olayları, meteor yağmurları, roket fırlatmaları, uzay etkinlikleri."""
+    if ay:
+        yil, ay_no = map(int, ay.split("-"))
+    else:
+        bugun = date.today()
+        yil, ay_no = bugun.year, bugun.month
+    if not 1900 <= yil <= 2100:
+        raise HTTPException(status_code=422, detail="Yıl 1900-2100 arasında olmalı")
+    return await events.ayin_olaylari(yil, ay_no)
 
 
 # ---------------------------------------------------------------------

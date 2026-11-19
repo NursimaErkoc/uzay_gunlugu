@@ -166,6 +166,182 @@ a { color: var(--vurgu); }
 }
 .haber-orijinal { margin: 8px 0 0; color: var(--soluk-yazi); font-size: 0.75rem; font-style: italic; }
 
+/* ===== Menü ===== */
+.menu { display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.menu a {
+  color: var(--soluk-yazi);
+  text-decoration: none;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--kenar);
+}
+.menu a:hover { color: var(--yazi); }
+.menu a.aktif { background: rgba(124, 156, 255, 0.25); color: var(--yazi); border-color: var(--vurgu); }
+
+/* ===== Uzay Takvimi ===== */
+.ay-secici { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ay-secici h2 { margin: 0; font-size: 1.4rem; text-transform: capitalize; }
+.ok-butonu, .filtre {
+  background: #0d1430;
+  color: var(--yazi);
+  border: 1px solid var(--kenar);
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+}
+.ok-butonu { width: 40px; height: 40px; }
+.ok-butonu:hover, .filtre:hover { border-color: var(--vurgu); }
+
+.filtreler { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 8px; }
+.filtre { padding: 6px 14px; font-size: 0.9rem; }
+.filtre.aktif { background: var(--vurgu); color: #0a0f24; border-color: var(--vurgu); font-weight: 600; }
+
+.secenek { display: inline-flex; align-items: center; gap: 6px; color: var(--soluk-yazi); font-size: 0.9rem; cursor: pointer; }
+.aciklama-notu { margin: 8px 0 0; color: var(--soluk-yazi); font-size: 0.8rem; }
+
+.gun-grubu { margin-bottom: 24px; }
+.gun-grubu.gecmis { opacity: 0.55; }       /* geçmiş günler soluk */
+.gun-basligi { margin: 0 0 10px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+
+.olay {
+  display: flex;
+  gap: 14px;
+  background: var(--kart);
+  border: 1px solid var(--kenar);
+  border-left: 4px solid var(--vurgu);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.olay-gokyuzu { border-left-color: #b48cff; }
+.olay-firlatma { border-left-color: #ff9a5c; }
+.olay-etkinlik { border-left-color: #5cd6c0; }
+
+.olay-gorsel, .olay-ikon { flex: 0 0 72px; width: 72px; height: 72px; border-radius: 10px; }
+.olay-gorsel { object-fit: cover; background: #000; }
+.olay-ikon { display: grid; place-items: center; font-size: 2rem; background: rgba(124, 156, 255, 0.12); }
+
+.olay-govde { flex: 1; min-width: 0; }   /* min-width: 0 -> uzun metin taşmasın */
+.olay-govde h4 { margin: 2px 0 4px; font-size: 1rem; }
+.olay-meta { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.olay-saat { color: var(--vurgu); font-weight: 600; font-size: 0.9rem; }
+.olay-alt { margin: 0 0 6px; color: var(--soluk-yazi); font-size: 0.82rem; }
+.olay-aciklama { margin: 0 0 6px; font-size: 0.9rem; }
+.etiket-yesil { background: rgba(92, 214, 140, 0.2); }
+
+@media (max-width: 480px) {
+  .olay-gorsel, .olay-ikon { flex-basis: 52px; width: 52px; height: 52px; font-size: 1.5rem; }
+}
+
+/* ===== Görünüm seçici (Liste / Takvim) ===== */
+.gorunum-secici {
+  display: inline-flex;
+  margin-top: 16px;
+  border: 1px solid var(--kenar);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.gorunum {
+  background: transparent;
+  color: var(--soluk-yazi);
+  border: 0;
+  padding: 6px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+.gorunum.aktif { background: rgba(124, 156, 255, 0.3); color: var(--yazi); }
+
+/* ===== Aylık takvim tablosu ===== */
+.takvim-karti { padding: 12px; }
+.takvim {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));   /* 7 eşit sütun = haftanın günleri */
+  gap: 4px;
+}
+.takvim-baslik {
+  text-align: center;
+  color: var(--soluk-yazi);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 0 8px;
+}
+.hucre {
+  min-height: 110px;
+  background: rgba(10, 16, 40, 0.55);
+  border: 1px solid var(--kenar);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  position: relative;
+}
+.hucre.bos { background: transparent; border-color: transparent; }
+.hucre.gecmis { opacity: 0.5; }
+.hucre.bugun { border-color: var(--vurgu); box-shadow: 0 0 0 1px var(--vurgu) inset; }
+.gun-no { font-size: 0.8rem; color: var(--soluk-yazi); padding: 0 2px; }
+.hucre.bugun .gun-no { color: var(--vurgu); font-weight: 700; }
+.olay-sayisi { display: none; }
+
+/* Olay "çipleri": küçük, tıklanabilir başlıklar */
+.cip, .daha {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  border: 0;
+  border-left: 3px solid var(--vurgu);
+  border-radius: 4px;
+  background: rgba(124, 156, 255, 0.15);
+  color: var(--yazi);
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  padding: 2px 4px;
+  text-align: left;
+  cursor: pointer;
+}
+.cip:hover { background: rgba(124, 156, 255, 0.32); }
+.cip-gokyuzu { border-left-color: #b48cff; background: rgba(180, 140, 255, 0.15); }
+.cip-firlatma { border-left-color: #ff9a5c; background: rgba(255, 154, 92, 0.13); }
+.cip-etkinlik { border-left-color: #5cd6c0; background: rgba(92, 214, 192, 0.13); }
+.cip-metin { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* uzunsa "..." */
+.daha { border-left-color: transparent; background: transparent; color: var(--vurgu); }
+
+/* Telefonda: başlıklar sığmaz -> sadece ikonlar, güne dokununca ayrıntı açılır */
+@media (max-width: 640px) {
+  .takvim-karti { padding: 6px; }
+  .takvim { gap: 2px; }
+  .hucre { min-height: 64px; padding: 2px; }
+  .hucre.dolu { cursor: pointer; }
+  .cip { display: inline-flex; width: auto; padding: 0; background: none; border: 0; font-size: 0.85rem; pointer-events: none; }
+  .cip-metin, .daha { display: none; }
+  .hucre { flex-direction: row; flex-wrap: wrap; align-content: flex-start; }
+  .gun-no { width: 100%; }
+}
+
+/* ===== Ayrıntı penceresi ===== */
+.detay-penceresi {
+  width: min(560px, calc(100vw - 32px));
+  max-height: 85vh;
+  background: #0f1736;
+  color: var(--yazi);
+  border: 1px solid var(--kenar);
+  border-radius: 16px;
+  padding: 20px;
+}
+.detay-penceresi::backdrop { background: rgba(3, 6, 20, 0.7); backdrop-filter: blur(3px); }
+.kapat {
+  float: right;
+  background: none;
+  border: 0;
+  color: var(--soluk-yazi);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.kapat:hover { color: var(--yazi); }
+
 .yukleniyor { color: var(--soluk-yazi); text-align: center; padding: 40px 0; }
 .haber-izgara .yukleniyor, .haber-izgara .hata { grid-column: 1 / -1; }
 .hata { color: #ff8a8a; text-align: center; padding: 40px 0; }

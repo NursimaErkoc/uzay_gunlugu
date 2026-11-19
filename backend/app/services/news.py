@@ -54,5 +54,8 @@ async def son_haberler(adet: int = 6) -> list[dict]:
         haber["baslik_tr"] = cevirmeler[i]
         haber["ozet_tr"] = cevirmeler[len(haberler) + i]
 
-    cache.kaydet(onbellek_anahtari, haberler, 30 * 60)   # 30 dakika
+    # Tüm çeviriler başarılıysa 30 dk sakla. Bir kısmı başarısızsa (servis yoğun olabilir)
+    # sadece 5 dk sakla ki kısa süre sonra tekrar denensin; yoksa 30 dk İngilizce kalır.
+    eksik_ceviri = any(h["baslik"] and not h["baslik_tr"] for h in haberler)
+    cache.kaydet(onbellek_anahtari, haberler, 5 * 60 if eksik_ceviri else 30 * 60)
     return haberler
