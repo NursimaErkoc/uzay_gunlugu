@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 
 from app.config import PROJE_KLASORU
-from app.services import nasa
+from app.services import facts, nasa, news
 
 app = FastAPI(
     title="Uzay Günlüğü API",
@@ -46,6 +46,23 @@ async def apod(
         raise HTTPException(status_code=404, detail=str(hata))
     except nasa.NasaHatasi as hata:
         # 502 = "Bad Gateway": biz sağlamız ama arkadaki servis (NASA) sorun çıkardı
+        raise HTTPException(status_code=502, detail=str(hata))
+
+
+@app.get("/api/fact", tags=["İçerik"])
+def gunun_bilgisi():
+    """Günün uzay bilgisi (her gün farklı)."""
+    return facts.gunun_bilgisi()
+
+
+@app.get("/api/news", tags=["İçerik"])
+async def haberler(
+    adet: int = Query(default=6, ge=1, le=12, description="Kaç haber gelsin (1-12)"),
+):
+    """En güncel uzay haberleri (Türkçe çevirili)."""
+    try:
+        return await news.son_haberler(adet)
+    except news.HaberHatasi as hata:
         raise HTTPException(status_code=502, detail=str(hata))
 
 

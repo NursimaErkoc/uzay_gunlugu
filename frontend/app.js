@@ -107,5 +107,60 @@ tarihKutusu.addEventListener("change", () => {
   apodGetir(tarihKutusu.value);
 });
 
-// Sayfa açılınca bugünün fotoğrafını getir
+// ---------------------------------------------------------------------
+// 4) Günün bilgisi
+// ---------------------------------------------------------------------
+async function bilgiGetir() {
+  const kutu = document.getElementById("bilgi");
+  try {
+    const cevap = await fetch("/api/fact");
+    const bilgi = await cevap.json();
+    kutu.innerHTML = `
+      <div class="bilgi-ust">
+        <h2>💡 Günün Bilgisi</h2>
+        <span class="etiket">${metinTemizle(bilgi.kategori)}</span>
+      </div>
+      <p class="bilgi-metni">${metinTemizle(bilgi.metin)}</p>`;
+  } catch {
+    kutu.remove();   // bilgi gelmezse kartı tamamen gizle
+  }
+}
+
+// ---------------------------------------------------------------------
+// 5) Güncel haberler
+// ---------------------------------------------------------------------
+async function haberleriGetir() {
+  const liste = document.getElementById("haber-listesi");
+  try {
+    const cevap = await fetch("/api/news?adet=6");
+    const haberler = await cevap.json();
+    if (!cevap.ok) throw new Error(haberler.detail);
+
+    // Her haber için bir kart oluştur, hepsini birleştir (map + join)
+    liste.innerHTML = haberler.map((h) => `
+      <a class="haber" href="${metinTemizle(h.url)}" target="_blank" rel="noopener">
+        ${h.gorsel ? `<img src="${metinTemizle(h.gorsel)}" alt="" loading="lazy">` : ""}
+        <div class="haber-govde">
+          <p class="haber-meta">${metinTemizle(h.kaynak)} · ${neZamanOnce(h.tarih)}</p>
+          <h3>${metinTemizle(h.baslik_tr || h.baslik)}</h3>
+          <p class="haber-ozet">${metinTemizle(h.ozet_tr || h.ozet)}</p>
+          ${h.baslik_tr ? `<p class="haber-orijinal">🇬🇧 ${metinTemizle(h.baslik)}</p>` : ""}
+        </div>
+      </a>`).join("");
+  } catch (hata) {
+    liste.innerHTML = `<p class="hata">😕 Haberler alınamadı.<br><small>${metinTemizle(hata.message)}</small></p>`;
+  }
+}
+
+// "2026-11-19T06:41:35Z" -> "3 saat önce"
+function neZamanOnce(isoTarih) {
+  const dakika = Math.round((Date.now() - new Date(isoTarih)) / 60000);
+  if (dakika < 60) return `${Math.max(dakika, 1)} dakika önce`;
+  if (dakika < 60 * 24) return `${Math.round(dakika / 60)} saat önce`;
+  return `${Math.round(dakika / (60 * 24))} gün önce`;
+}
+
+// Sayfa açılınca her şeyi getir (üçü aynı anda başlar, birbirini beklemez)
+bilgiGetir();
 apodGetir();
+haberleriGetir();

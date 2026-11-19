@@ -17,6 +17,11 @@
   </header>
 
   <main class="icerik">
+    <!-- Günün Bilgisi kartı -->
+    <section class="kart bilgi-karti" id="bilgi">
+      <p class="yukleniyor">Günün bilgisi hazırlanıyor... ✨</p>
+    </section>
+
     <!-- Günün Fotoğrafı kartı -->
     <section class="kart" id="apod">
       <div class="kart-ust">
@@ -33,10 +38,21 @@
         <p class="yukleniyor">Uzaydan veri geliyor... 🛰️</p>
       </div>
     </section>
+
+    <!-- Güncel Haberler -->
+    <section class="kart" id="haberler">
+      <div class="kart-ust">
+        <h2>📰 Güncel Uzay Haberleri</h2>
+      </div>
+      <div id="haber-listesi" class="haber-izgara">
+        <p class="yukleniyor">Haberler yükleniyor... 📡</p>
+      </div>
+    </section>
   </main>
 
   <footer class="alt">
-    Veriler: <a href="https://apod.nasa.gov" target="_blank" rel="noopener">NASA APOD</a>
+    Veriler: <a href="https://science.nasa.gov/apod/" target="_blank" rel="noopener">NASA APOD</a> ·
+    <a href="https://spaceflightnewsapi.net" target="_blank" rel="noopener">Spaceflight News API</a>
   </footer>
 
   <script src="app.js"></script>

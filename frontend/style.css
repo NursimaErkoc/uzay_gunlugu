@@ -115,5 +115,57 @@ a { color: var(--vurgu); }
   font-size: 0.9rem;
 }
 
+/* ===== Günün Bilgisi ===== */
+.bilgi-karti {
+  background: linear-gradient(135deg, rgba(124, 156, 255, 0.22), rgba(190, 120, 255, 0.14));
+  border-color: rgba(160, 170, 255, 0.35);
+}
+.bilgi-ust { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bilgi-ust h2 { margin: 0; font-size: 1.15rem; }
+.etiket {
+  background: rgba(124, 156, 255, 0.25);
+  color: var(--yazi);
+  border-radius: 999px;
+  padding: 2px 12px;
+  font-size: 0.8rem;
+}
+.bilgi-metni { margin: 12px 0 0; font-size: 1.1rem; }
+
+/* ===== Haberler: kart ızgarası ===== */
+.haber-izgara {
+  display: grid;
+  /* Sığdığı kadar sütun: her biri en az 250px. Telefonda 1, bilgisayarda 2-3 sütun */
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+.haber {
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 16, 40, 0.6);
+  border: 1px solid var(--kenar);
+  border-radius: 12px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.haber:hover { transform: translateY(-3px); border-color: var(--vurgu); }
+.haber img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+.haber-govde { padding: 12px 14px 14px; }
+.haber-govde h3 { margin: 4px 0 6px; font-size: 1rem; line-height: 1.35; }
+.haber-meta { margin: 0; color: var(--vurgu); font-size: 0.8rem; }
+.haber-ozet {
+  margin: 0;
+  color: var(--soluk-yazi);
+  font-size: 0.88rem;
+  /* Özeti en fazla 3 satır göster, fazlasını "..." yap */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.haber-orijinal { margin: 8px 0 0; color: var(--soluk-yazi); font-size: 0.75rem; font-style: italic; }
+
 .yukleniyor { color: var(--soluk-yazi); text-align: center; padding: 40px 0; }
+.haber-izgara .yukleniyor, .haber-izgara .hata { grid-column: 1 / -1; }
 .hata { color: #ff8a8a; text-align: center; padding: 40px 0; }
