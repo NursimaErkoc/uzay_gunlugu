@@ -2,7 +2,7 @@
 
 NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberlerini ve bu ayın uzay olaylarını gösteren, olaylar için e-posta hatırlatması gönderebilen bir web sitesi.
 
-Bu proje API, Git/GitHub, backend, frontend, veritabanı ve deployment gibi temel yazılım bileşenlerini öğrenmek için yapılıyor.
+
 
 ## Teknolojiler
 - **Backend:** Python + FastAPI
