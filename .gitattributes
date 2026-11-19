@@ -1,0 +1,2 @@
+# Tüm metin dosyalarında satır sonu LF olsun (Windows/Mac/Linux fark etmeksizin)
+* text=auto eol=lf
