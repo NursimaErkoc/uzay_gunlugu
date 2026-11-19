@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!-- head: sayfanın "kimlik bilgileri", ekranda görünmez -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- telefonda düzgün görünsün -->
+  <title>Uzay Günlüğü</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Arka plandaki yıldızlar (CSS ile çiziliyor) -->
+  <div class="yildizlar" aria-hidden="true"></div>
+
+  <header class="ust">
+    <h1>🚀 Uzay Günlüğü</h1>
+    <p class="alt-baslik">Her gün evrenden yeni bir pencere</p>
+  </header>
+
+  <main class="icerik">
+    <!-- Günün Fotoğrafı kartı -->
+    <section class="kart" id="apod">
+      <div class="kart-ust">
+        <h2>📸 Günün Fotoğrafı</h2>
+        <!-- Tarih seçici: geçmiş günlerin fotoğraflarına bakmak için -->
+        <label class="tarih-secici">
+          <span>Tarih:</span>
+          <input type="date" id="tarih" min="1995-06-16">
+        </label>
+      </div>
+
+      <!-- JavaScript bu kutunun içini dolduracak -->
+      <div id="apod-icerik">
+        <p class="yukleniyor">Uzaydan veri geliyor... 🛰️</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="alt">
+    Veriler: <a href="https://apod.nasa.gov" target="_blank" rel="noopener">NASA APOD</a>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -5,13 +5,16 @@ Uzay Günlüğü backend'i, yani kendi API'miz.
     .venv\\Scripts\\uvicorn app.main:app --reload --app-dir backend
 
 Sonra tarayıcıda:
+    http://localhost:8000           -> web sitemiz (frontend)
     http://localhost:8000/docs      -> otomatik API dokümantasyonu (Swagger)
     http://localhost:8000/api/apod  -> günün fotoğrafı (JSON)
 """
 from datetime import date
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.staticfiles import StaticFiles
 
+from app.config import PROJE_KLASORU
 from app.services import nasa
 
 app = FastAPI(
@@ -38,6 +41,17 @@ async def apod(
     """NASA'nın Günün Astronomi Fotoğrafı (APOD)."""
     try:
         return await nasa.gunun_fotografi(tarih.isoformat() if tarih else None)
+    except nasa.ApodBulunamadi as hata:
+        # 404 = "Not Found": istenen şey yok
+        raise HTTPException(status_code=404, detail=str(hata))
     except nasa.NasaHatasi as hata:
         # 502 = "Bad Gateway": biz sağlamız ama arkadaki servis (NASA) sorun çıkardı
         raise HTTPException(status_code=502, detail=str(hata))
+
+
+# ---------------------------------------------------------------------
+# Frontend: frontend/ klasöründeki HTML/CSS/JS dosyalarını sun.
+# DİKKAT: Bu satır en sonda olmalı; yoksa "/" her şeyi yakalar ve
+# yukarıdaki /api/... adresleri çalışmaz.
+# ---------------------------------------------------------------------
+app.mount("/", StaticFiles(directory=PROJE_KLASORU / "frontend", html=True), name="frontend")
