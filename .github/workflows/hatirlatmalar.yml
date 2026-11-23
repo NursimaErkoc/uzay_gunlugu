@@ -1,0 +1,34 @@
+# GitHub Actions zamanlanmış görev (cron): 15 dakikada bir internetteki siteyi çağırır.
+# Neden? Ücretsiz sunucu 15 dk kimse girmezse uyur; uyurken hatırlatma gönderemez.
+# Bu çağrı hem sunucuyu uyandırır hem de zamanı gelen hatırlatmaları gönderir.
+#
+# Gerekli GitHub "secret"ları (Repo > Settings > Secrets and variables > Actions):
+#   SITE_ADRESI        -> örn. https://uzay-gunlugu.onrender.com
+#   YONETICI_ANAHTARI  -> Render'daki ile aynı anahtar
+
+name: Hatırlatma kontrolü
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # her 15 dakikada bir (UTC). GitHub yoğunken birkaç dakika gecikebilir.
+  workflow_dispatch:          # Actions sekmesinden elle de çalıştırılabilsin ("Run workflow" butonu)
+
+jobs:
+  hatirlatmalari-gonder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Siteyi uyandır ve zamanı gelen hatırlatmaları gönder
+        env:
+          SITE_ADRESI: ${{ secrets.SITE_ADRESI }}
+          YONETICI_ANAHTARI: ${{ secrets.YONETICI_ANAHTARI }}
+        run: |
+          if [ -z "$SITE_ADRESI" ]; then
+            echo "SITE_ADRESI secret'ı tanımlı değil, atlanıyor."
+            exit 0
+          fi
+          # Uyuyan sunucunun açılması ~1 dk sürebilir: 2 dk bekle, olmazsa 3 kez daha dene
+          curl --fail-with-body --silent --show-error \
+               --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
+               -X POST "$SITE_ADRESI/api/gorevler/hatirlatmalar" \
+               -H "X-Yonetici-Anahtari: $YONETICI_ANAHTARI"
+          echo

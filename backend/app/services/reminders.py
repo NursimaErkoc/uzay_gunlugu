@@ -3,12 +3,11 @@ Hatırlatma servisi: kur, listele, sil ve zamanı gelenleri e-postayla gönder.
 """
 import asyncio
 import html
-import sqlite3
 from datetime import datetime, time, timedelta, timezone
 
 from app import mailer
 from app.config import SITE_ADRESI
-from app.db import baglan
+from app.db import ButunlukHatasi, baglan
 
 # Hangi seçenek, olaydan ne kadar önce, ekranda nasıl yazılsın
 SECENEKLER = {
@@ -83,23 +82,24 @@ def olustur(olay: dict, ne_zaman: str) -> dict:
         with baglan() as db:
             # "?" işaretleri: değerleri SQL'e güvenli şekilde yerleştirir (SQL injection saldırısına karşı).
             # Asla f"... VALUES ('{baslik}')" gibi metni doğrudan SQL'e yapıştırma!
-            imlec = db.execute(
+            # RETURNING id: eklenen satırın otomatik verilen numarasını geri döndür
+            yeni_id = db.execute(
                 """INSERT INTO hatirlatmalar
                    (olay_id, baslik, ikon, olay_tarihi, kesinlik, aciklama, alt_bilgi, link,
                     ne_zaman, gonderim_zamani, olusturma)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   RETURNING id""",
                 (olay["id"], olay["baslik"], olay.get("ikon"), _metne(olay_tarihi), olay["kesinlik"],
                  olay.get("aciklama"), olay.get("alt_bilgi"), olay.get("link"),
                  ne_zaman, _metne(gonderim), _metne(_simdi())),
-            )
-            yeni_id = imlec.lastrowid
-    except sqlite3.IntegrityError as hata:   # UNIQUE kuralı ihlal edildi
+            ).fetchone()["id"]
+    except ButunlukHatasi as hata:   # UNIQUE kuralı ihlal edildi
         raise AyniHatirlatmaVar("Bu olay için bu hatırlatma zaten kurulu") from hata
 
     return getir(yeni_id)
 
 
-def _sozluge(satir: sqlite3.Row) -> dict:
+def _sozluge(satir: dict) -> dict:
     h = dict(satir)
     h["ne_zaman_metni"] = SECENEKLER[h["ne_zaman"]][1]
     return h
@@ -116,7 +116,7 @@ def listele() -> list[dict]:
     with baglan() as db:
         satirlar = db.execute("""
             SELECT * FROM hatirlatmalar
-            ORDER BY durum != 'bekliyor', gonderim_zamani
+            ORDER BY CASE WHEN durum = 'bekliyor' THEN 0 ELSE 1 END, gonderim_zamani
         """).fetchall()
     return [_sozluge(s) for s in satirlar]
 
@@ -145,6 +145,13 @@ async def bekleyenleri_gonder() -> int:
     gonderilen = 0
     for satir in bekleyenler:
         h = _sozluge(satir)
+
+        # KİLİT: Aynı anda iki yerden (sunucunun zamanlayıcısı + GitHub Actions) çalışılırsa
+        # aynı e-posta iki kez gitmesin. Durumu 'bekliyor'dan 'gonderiliyor'a çevirmeyi deniyoruz;
+        # bunu sadece biri başarabilir (WHERE durum = 'bekliyor'). Başaramazsak başkası almış demektir.
+        if not _durum_degistir(h["id"], "gonderiliyor", sadece_su_durumdaysa="bekliyor"):
+            continue
+
         # Sunucu uzun süre kapalı kaldıysa ve olay çoktan geçtiyse e-posta atmanın anlamı yok
         if _zamana(h["olay_tarihi"]) < _simdi() - timedelta(hours=1):
             _durum_degistir(h["id"], "kacirildi")
@@ -153,15 +160,22 @@ async def bekleyenleri_gonder() -> int:
             await asyncio.to_thread(mailer.gonder, *hatirlatma_epostasi(h))
         except mailer.EpostaHatasi as hata:
             print(f"[hatırlatma] #{h['id']} gönderilemedi, sonra tekrar denenecek: {hata}")
+            _durum_degistir(h["id"], "bekliyor")   # kilidi bırak, sonra tekrar denensin
             break   # muhtemelen ayar/bağlantı sorunu; diğerlerini de şimdi denemeyelim
         _durum_degistir(h["id"], "gonderildi")
         gonderilen += 1
     return gonderilen
 
 
-def _durum_degistir(hatirlatma_id: int, durum: str) -> None:
+def _durum_degistir(hatirlatma_id: int, durum: str, sadece_su_durumdaysa: str | None = None) -> bool:
+    """Durumu değiştirir. Değişiklik yapıldıysa True döner."""
     with baglan() as db:
-        db.execute("UPDATE hatirlatmalar SET durum = ? WHERE id = ?", (durum, hatirlatma_id))
+        if sadece_su_durumdaysa:
+            imlec = db.execute("UPDATE hatirlatmalar SET durum = ? WHERE id = ? AND durum = ?",
+                               (durum, hatirlatma_id, sadece_su_durumdaysa))
+        else:
+            imlec = db.execute("UPDATE hatirlatmalar SET durum = ? WHERE id = ?", (durum, hatirlatma_id))
+    return imlec.rowcount > 0
 
 
 # ---------------------------------------------------------------------
