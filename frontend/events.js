@@ -17,7 +17,40 @@ const durum = {
   hatirlatmalar: [],      // sunucudaki kurulu hatırlatmalar
   epostaAyarli: false,
   alici: null,
+  yetkili: false,         // yönetici mi? (site internetteyken anahtar gerekir)
+  anahtarGerekli: false,
 };
+
+// ---------------------------------------------------------------------
+// Yönetici anahtarı: tarayıcıda saklanır, her hatırlatma isteğine başlık (header) olarak eklenir
+// ---------------------------------------------------------------------
+function anahtarOku() {
+  try { return localStorage.getItem("yonetici-anahtari") || ""; } catch { return ""; }
+}
+function anahtarYaz(anahtar) {
+  try { localStorage.setItem("yonetici-anahtari", anahtar); } catch { /* önemli değil */ }
+}
+
+// fetch() ile aynı, ama yönetici anahtarını da gönderir
+function yetkiliFetch(adres, ayarlar = {}) {
+  return fetch(adres, {
+    ...ayarlar,
+    headers: { ...(ayarlar.headers || {}), "X-Yonetici-Anahtari": anahtarOku() },
+  });
+}
+
+async function yoneticiGirisi() {
+  const girilen = prompt("🔑 Yönetici anahtarını gir:");
+  if (!girilen) return;
+  anahtarYaz(girilen.trim());
+  await hatirlatmalariGetir();
+  if (!durum.yetkili) {
+    anahtarYaz("");
+    alert("Anahtar yanlış. 😕");
+  }
+  listeyiCiz();
+  hatirlatmalarimPenceresiAc();
+}
 
 // Şu an seçili ay, "2026-12" biçiminde
 function aktifAy() {
@@ -210,11 +243,13 @@ const SECENEKLER = [
 
 async function hatirlatmalariGetir() {
   try {
-    const cevap = await fetch("/api/reminders");
+    const cevap = await yetkiliFetch("/api/reminders");
     const veri = await cevap.json();
     durum.hatirlatmalar = veri.hatirlatmalar;
     durum.epostaAyarli = veri.eposta_ayarli;
     durum.alici = veri.alici;
+    durum.yetkili = veri.yetkili;
+    durum.anahtarGerekli = veri.anahtar_gerekli;
   } catch {
     durum.hatirlatmalar = [];
   }
@@ -270,7 +305,7 @@ async function hatirlatmaKur(olayId) {
     return;
   }
   // POST isteği: sunucuya veri gönderiyoruz (JSON olarak)
-  const cevap = await fetch("/api/reminders", {
+  const cevap = await yetkiliFetch("/api/reminders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ olay_id: olayId, ay: aktifAy(), ne_zaman: secili.value }),
@@ -287,13 +322,22 @@ async function hatirlatmaKur(olayId) {
 }
 
 async function hatirlatmaSil(hatirlatmaId) {
-  await fetch(`/api/reminders/${hatirlatmaId}`, { method: "DELETE" });
+  await yetkiliFetch(`/api/reminders/${hatirlatmaId}`, { method: "DELETE" });
   await hatirlatmalariGetir();
   listeyiCiz();
 }
 
 // Tüm hatırlatmaların listesi
 function hatirlatmalarimPenceresiAc() {
+  if (!durum.yetkili) {
+    detayIcerik.innerHTML = `
+      <h3 class="gun-basligi">🔔 Hatırlatmalar</h3>
+      <p>Hatırlatmalar sadece sitenin sahibine açık.</p>
+      <button class="ana-buton" data-eylem="giris">🔑 Yönetici girişi</button>`;
+    if (!detay.open) detay.showModal();
+    return;
+  }
+
   const bekleyen = durum.hatirlatmalar.filter((h) => h.durum === "bekliyor");
   const gecmis = durum.hatirlatmalar.filter((h) => h.durum !== "bekliyor").slice(0, 10);
   const durumMetni = { gonderildi: "📧 gönderildi", kacirildi: "⏭️ zamanında gönderilemedi" };
@@ -314,8 +358,11 @@ function hatirlatmalarimPenceresiAc() {
     : `<div class="not">⚠️ E-posta ayarları yapılmamış. <code>.env</code> dosyasına
        <code>GMAIL_ADRESI</code> ve <code>GMAIL_UYGULAMA_SIFRESI</code> eklenip sunucu yeniden başlatılmalı.</div>`;
 
+  const cikis = durum.anahtarGerekli
+    ? ` <button class="kucuk-buton" data-eylem="cikis">Çıkış yap</button>` : "";
+
   detayIcerik.innerHTML = `
-    <h3 class="gun-basligi">🔔 Hatırlatmalarım</h3>
+    <h3 class="gun-basligi">🔔 Hatırlatmalarım${cikis}</h3>
     ${epostaDurumu}
     <p id="hatirlatma-mesaji" class="form-mesaji"></p>
     <h4>Bekleyen</h4>
@@ -327,7 +374,7 @@ function hatirlatmalarimPenceresiAc() {
 async function testEpostasiGonder() {
   const mesaj = document.getElementById("hatirlatma-mesaji");
   mesaj.textContent = "Gönderiliyor...";
-  const cevap = await fetch("/api/reminders/test", { method: "POST" });
+  const cevap = await yetkiliFetch("/api/reminders/test", { method: "POST" });
   const veri = await cevap.json();
   mesaj.textContent = cevap.ok ? `✅ ${veri.mesaj}. Gelen kutunu kontrol et!` : `😕 ${veri.detail}`;
 }
@@ -342,6 +389,13 @@ document.addEventListener("click", async (e) => {
   if (eylem === "kur") await hatirlatmaKur(buton.dataset.id);
   if (eylem === "test") await testEpostasiGonder();
   if (eylem === "hatirlatmalarim") hatirlatmalarimPenceresiAc();
+  if (eylem === "giris") await yoneticiGirisi();
+  if (eylem === "cikis") {
+    anahtarYaz("");
+    await hatirlatmalariGetir();
+    listeyiCiz();
+    hatirlatmalarimPenceresiAc();
+  }
   if (eylem === "sil") {
     await hatirlatmaSil(buton.dataset.hid);
     // Hangi pencere açıksa onu güncelle
@@ -410,9 +464,9 @@ function hatirlatButonu(o) {
             data-eylem="hatirlat" data-id="${metinTemizle(o.id)}">${metin}</button>`;
 }
 
-// Tarihi belli ve henüz gerçekleşmemiş olaylar için hatırlatma kurulabilir
+// Tarihi belli ve henüz gerçekleşmemiş olaylar için hatırlatma kurulabilir (sadece yönetici)
 function hatirlatilabilir(o) {
-  return o.kesinlik !== "ay" && new Date(o.tarih) > new Date();
+  return durum.yetkili && o.kesinlik !== "ay" && new Date(o.tarih) > new Date();
 }
 
 // ---------------------------------------------------------------------

@@ -16,7 +16,14 @@ load_dotenv(PROJE_KLASORU / ".env")
 NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
 
 # --- Veritabanı ---
+# DATABASE_URL doluysa (internette) PostgreSQL kullanılır, boşsa (bilgisayarında) SQLite dosyası.
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 VERITABANI = PROJE_KLASORU / "uzay_gunlugu.db"   # .gitignore'da (*.db), GitHub'a gitmez
+
+# --- Güvenlik ---
+# Site internetteyken hatırlatma kurma/silme ve test e-postası sadece bu anahtarı bilene açık.
+# Boşsa (bilgisayarında) herkes kullanabilir.
+YONETICI_ANAHTARI = os.getenv("YONETICI_ANAHTARI", "").strip()
 
 # --- E-posta (Gmail) ---
 GMAIL_ADRESI = os.getenv("GMAIL_ADRESI", "").strip()

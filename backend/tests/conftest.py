@@ -27,6 +27,7 @@ SABIT_SIMDI = datetime(2026, 12, 1, 12, 0, 0, tzinfo=timezone.utc)
 @pytest.fixture(autouse=True)
 def temiz_ortam(tmp_path, monkeypatch):
     # 1) Geçici veritabanı ve önbellek klasörü (tmp_path: pytest'in verdiği geçici klasör)
+    monkeypatch.setattr(db, "DATABASE_URL", "")   # .env'de bulut veritabanı olsa bile testler SQLite kullansın
     monkeypatch.setattr(db, "VERITABANI", tmp_path / "test.db")
     monkeypatch.setattr(cache, "DISK_KLASORU", tmp_path / "onbellek")
     cache._hafiza.clear()
