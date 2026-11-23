@@ -26,10 +26,15 @@
         <button id="sonraki-ay" class="ok-butonu" aria-label="Sonraki ay">▶</button>
       </div>
 
-      <!-- Görünüm seçici: Liste / Takvim -->
-      <div class="gorunum-secici" id="gorunum-secici">
-        <button class="gorunum aktif" data-gorunum="liste">☰ Liste</button>
-        <button class="gorunum" data-gorunum="takvim">▦ Takvim</button>
+      <!-- Görünüm seçici: Liste / Takvim  +  Hatırlatmalarım -->
+      <div class="arac-cubugu">
+        <div class="gorunum-secici" id="gorunum-secici">
+          <button class="gorunum aktif" data-gorunum="liste">☰ Liste</button>
+          <button class="gorunum" data-gorunum="takvim">▦ Takvim</button>
+        </div>
+        <button class="hatirlatmalarim-butonu" data-eylem="hatirlatmalarim">
+          🔔 Hatırlatmalarım <span id="hatirlatma-sayisi"></span>
+        </button>
       </div>
 
       <!-- Filtreler -->

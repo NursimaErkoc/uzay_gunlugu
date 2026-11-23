@@ -14,7 +14,15 @@ const durum = {
   // "liste" | "takvim". Öncelik: adresteki ?gorunum=takvim, sonra son seçim, yoksa liste
   gorunum: new URLSearchParams(location.search).get("gorunum") || tercihOku() || "liste",
   olaylar: [],
+  hatirlatmalar: [],      // sunucudaki kurulu hatırlatmalar
+  epostaAyarli: false,
+  alici: null,
 };
+
+// Şu an seçili ay, "2026-12" biçiminde
+function aktifAy() {
+  return `${durum.yil}-${String(durum.ay).padStart(2, "0")}`;
+}
 
 // Kullanıcının son görünüm seçimini tarayıcıda hatırla (localStorage).
 // try/catch: gizli sekmede vb. localStorage kapalı olabilir, o zaman sessizce geç.
@@ -32,7 +40,7 @@ const ayBasligi = document.getElementById("ay-basligi");
 // Veriyi çek
 // ---------------------------------------------------------------------
 async function olaylariGetir() {
-  const ayMetni = `${durum.yil}-${String(durum.ay).padStart(2, "0")}`;   // 2026-12
+  const ayMetni = aktifAy();   // 2026-12
   ayBasligi.textContent = new Date(durum.yil, durum.ay - 1, 1)
     .toLocaleDateString("tr-TR", { month: "long", year: "numeric" });     // "Aralık 2026"
   liste.innerHTML = `<p class="yukleniyor">Takvim hazırlanıyor... 🗓️<br>
@@ -43,8 +51,8 @@ async function olaylariGetir() {
     const veri = await cevap.json();
     if (!cevap.ok) throw new Error(veri.detail || "Bilinmeyen hata");
 
-    // Kullanıcı bu arada başka aya geçtiyse eski cevabı gösterme
-    if (veri.ay !== ayMetni) return;
+    // Cevap gelene kadar kullanıcı ◀ ▶ ile başka aya geçtiyse bu eski cevabı gösterme
+    if (ayMetni !== aktifAy()) return;
 
     durum.olaylar = veri.olaylar;
     durum.eksik = veri.eksik;
@@ -191,6 +199,158 @@ function gunDetayiAc(gun) {
   detay.showModal();
 }
 
+// ---------------------------------------------------------------------
+// Hatırlatmalar
+// ---------------------------------------------------------------------
+const SECENEKLER = [
+  { deger: "1saat", metin: "1 saat önce", ms: 60 * 60 * 1000 },
+  { deger: "1gun", metin: "1 gün önce", ms: 24 * 60 * 60 * 1000 },
+  { deger: "1hafta", metin: "1 hafta önce", ms: 7 * 24 * 60 * 60 * 1000 },
+];
+
+async function hatirlatmalariGetir() {
+  try {
+    const cevap = await fetch("/api/reminders");
+    const veri = await cevap.json();
+    durum.hatirlatmalar = veri.hatirlatmalar;
+    durum.epostaAyarli = veri.eposta_ayarli;
+    durum.alici = veri.alici;
+  } catch {
+    durum.hatirlatmalar = [];
+  }
+  hatirlatmaSayaciniGuncelle();
+}
+
+function hatirlatmaSayaciniGuncelle() {
+  const sayi = durum.hatirlatmalar.filter((h) => h.durum === "bekliyor").length;
+  document.getElementById("hatirlatma-sayisi").textContent = sayi ? `(${sayi})` : "";
+}
+
+// Bir olay için "ne zaman hatırlatayım?" penceresi
+function hatirlatmaPenceresiAc(olayId) {
+  const olay = durum.olaylar.find((o) => o.id === olayId);
+  if (!olay) return;
+  const kalanMs = new Date(olay.tarih) - new Date();
+  const kurulu = durum.hatirlatmalar.filter((h) => h.olay_id === olay.id && h.durum === "bekliyor");
+
+  const secenekler = SECENEKLER.map((s) => {
+    const varMi = kurulu.find((h) => h.ne_zaman === s.deger);
+    if (varMi) {
+      return `<div class="secenek-satiri">✅ ${s.metin}
+        <button class="kucuk-buton" data-eylem="sil" data-hid="${varMi.id}">Kaldır</button></div>`;
+    }
+    // Seçilemeyecek durumlar: zamanı geçmiş ya da saati belli değil
+    const uygunDegil = s.ms >= kalanMs || (s.deger === "1saat" && olay.kesinlik === "gun");
+    return `<label class="secenek-satiri${uygunDegil ? " pasif" : ""}">
+      <input type="radio" name="ne-zaman" value="${s.deger}" ${uygunDegil ? "disabled" : ""}> ${s.metin}
+      ${uygunDegil ? `<small>(uygun değil)</small>` : ""}</label>`;
+  }).join("");
+
+  const uyari = durum.epostaAyarli ? "" :
+    `<div class="not">⚠️ E-posta ayarları henüz yapılmamış. Hatırlatmayı kurabilirsin ama
+     <code>.env</code> dosyasına Gmail bilgileri eklenene kadar e-posta gönderilmez.</div>`;
+
+  detayIcerik.innerHTML = `
+    <h3 class="gun-basligi">🔔 Hatırlatma kur</h3>
+    <p><strong>${olay.ikon} ${metinTemizle(olay.baslik)}</strong><br>
+       <small>${gunBasligi(gunAnahtari(olay.tarih))}${olay.kesinlik === "gun" ? "" : ", " + saatYaz(olay.tarih)}</small></p>
+    ${uyari}
+    <p>E-posta ne zaman gelsin?${durum.alici ? ` <small>(${metinTemizle(durum.alici)})</small>` : ""}</p>
+    <div class="secenekler">${secenekler}</div>
+    <p id="hatirlatma-mesaji" class="form-mesaji"></p>
+    <button class="ana-buton" data-eylem="kur" data-id="${metinTemizle(olay.id)}">Hatırlatmayı kur</button>`;
+  if (!detay.open) detay.showModal();
+}
+
+async function hatirlatmaKur(olayId) {
+  const secili = detayIcerik.querySelector('input[name="ne-zaman"]:checked');
+  const mesaj = document.getElementById("hatirlatma-mesaji");
+  if (!secili) {
+    mesaj.textContent = "Önce bir seçenek işaretle.";
+    return;
+  }
+  // POST isteği: sunucuya veri gönderiyoruz (JSON olarak)
+  const cevap = await fetch("/api/reminders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ olay_id: olayId, ay: aktifAy(), ne_zaman: secili.value }),
+  });
+  const veri = await cevap.json();
+  if (!cevap.ok) {
+    mesaj.textContent = "😕 " + (typeof veri.detail === "string" ? veri.detail : "Kurulamadı");
+    return;
+  }
+  await hatirlatmalariGetir();
+  listeyiCiz();
+  hatirlatmaPenceresiAc(olayId);   // pencereyi güncel haliyle yeniden çiz
+  document.getElementById("hatirlatma-mesaji").textContent = `✅ Kuruldu! ${veri.ne_zaman_metni} e-posta gelecek.`;
+}
+
+async function hatirlatmaSil(hatirlatmaId) {
+  await fetch(`/api/reminders/${hatirlatmaId}`, { method: "DELETE" });
+  await hatirlatmalariGetir();
+  listeyiCiz();
+}
+
+// Tüm hatırlatmaların listesi
+function hatirlatmalarimPenceresiAc() {
+  const bekleyen = durum.hatirlatmalar.filter((h) => h.durum === "bekliyor");
+  const gecmis = durum.hatirlatmalar.filter((h) => h.durum !== "bekliyor").slice(0, 10);
+  const durumMetni = { gonderildi: "📧 gönderildi", kacirildi: "⏭️ zamanında gönderilemedi" };
+
+  const satir = (h) => `
+    <div class="hatirlatma-satiri">
+      <div>
+        <strong>${metinTemizle(h.ikon || "🔔")} ${metinTemizle(h.baslik)}</strong><br>
+        <small>${gunBasligi(gunAnahtari(h.olay_tarihi))} · ${h.durum === "bekliyor"
+          ? h.ne_zaman_metni : durumMetni[h.durum] || h.durum}</small>
+      </div>
+      <button class="kucuk-buton" data-eylem="sil" data-hid="${h.id}" aria-label="Sil">🗑️</button>
+    </div>`;
+
+  const epostaDurumu = durum.epostaAyarli
+    ? `<p class="form-mesaji">📧 E-postalar şu adrese gidiyor: <strong>${metinTemizle(durum.alici)}</strong></p>
+       <button class="kucuk-buton" data-eylem="test">Test e-postası gönder</button>`
+    : `<div class="not">⚠️ E-posta ayarları yapılmamış. <code>.env</code> dosyasına
+       <code>GMAIL_ADRESI</code> ve <code>GMAIL_UYGULAMA_SIFRESI</code> eklenip sunucu yeniden başlatılmalı.</div>`;
+
+  detayIcerik.innerHTML = `
+    <h3 class="gun-basligi">🔔 Hatırlatmalarım</h3>
+    ${epostaDurumu}
+    <p id="hatirlatma-mesaji" class="form-mesaji"></p>
+    <h4>Bekleyen</h4>
+    ${bekleyen.length ? bekleyen.map(satir).join("") : `<p class="form-mesaji">Henüz hatırlatma yok. Bir olaydaki 🔔 butonuna tıkla.</p>`}
+    ${gecmis.length ? `<h4>Geçmiş</h4>${gecmis.map(satir).join("")}` : ""}`;
+  if (!detay.open) detay.showModal();
+}
+
+async function testEpostasiGonder() {
+  const mesaj = document.getElementById("hatirlatma-mesaji");
+  mesaj.textContent = "Gönderiliyor...";
+  const cevap = await fetch("/api/reminders/test", { method: "POST" });
+  const veri = await cevap.json();
+  mesaj.textContent = cevap.ok ? `✅ ${veri.mesaj}. Gelen kutunu kontrol et!` : `😕 ${veri.detail}`;
+}
+
+// Tüm hatırlatma butonları için tek dinleyici (data-eylem="..." ile hangi iş olduğunu anlıyoruz)
+document.addEventListener("click", async (e) => {
+  const buton = e.target.closest("[data-eylem]");
+  if (!buton) return;
+  const eylem = buton.dataset.eylem;
+
+  if (eylem === "hatirlat") hatirlatmaPenceresiAc(buton.dataset.id);
+  if (eylem === "kur") await hatirlatmaKur(buton.dataset.id);
+  if (eylem === "test") await testEpostasiGonder();
+  if (eylem === "hatirlatmalarim") hatirlatmalarimPenceresiAc();
+  if (eylem === "sil") {
+    await hatirlatmaSil(buton.dataset.hid);
+    // Hangi pencere açıksa onu güncelle
+    const kurButonu = detayIcerik.querySelector('[data-eylem="kur"]');
+    if (kurButonu) hatirlatmaPenceresiAc(kurButonu.dataset.id);
+    else hatirlatmalarimPenceresiAc();
+  }
+});
+
 document.getElementById("detay-kapat").addEventListener("click", () => detay.close());
 // Pencerenin dışındaki karanlık alana tıklayınca da kapansın
 detay.addEventListener("click", (e) => { if (e.target === detay) detay.close(); });
@@ -234,8 +394,25 @@ function olayKarti(o) {
         ${o.alt_bilgi ? `<p class="olay-alt">${metinTemizle(o.alt_bilgi)}</p>` : ""}
         ${o.aciklama ? `<p class="olay-aciklama">${metinTemizle(o.aciklama)}</p>` : ""}
         ${o.link ? `<a href="${metinTemizle(o.link)}" target="_blank" rel="noopener">📺 Canlı yayın / video →</a>` : ""}
+        ${hatirlatButonu(o)}
       </div>
     </article>`;
+}
+
+// Olay kartındaki 🔔 butonu: kurulu hatırlatma varsa onu gösterir
+function hatirlatButonu(o) {
+  if (!hatirlatilabilir(o)) return "";
+  const kurulu = durum.hatirlatmalar.filter((h) => h.olay_id === o.id && h.durum === "bekliyor");
+  const metin = kurulu.length
+    ? `🔔 Kuruldu: ${kurulu.map((h) => h.ne_zaman_metni).join(", ")}`
+    : "🔔 Hatırlat";
+  return `<button class="hatirlat-butonu${kurulu.length ? " kurulu" : ""}"
+            data-eylem="hatirlat" data-id="${metinTemizle(o.id)}">${metin}</button>`;
+}
+
+// Tarihi belli ve henüz gerçekleşmemiş olaylar için hatırlatma kurulabilir
+function hatirlatilabilir(o) {
+  return o.kesinlik !== "ay" && new Date(o.tarih) > new Date();
 }
 
 // ---------------------------------------------------------------------
@@ -313,4 +490,5 @@ gorunumButonlari.forEach((buton) => {
 });
 gorunumButonlariniGuncelle();
 
-olaylariGetir();
+// Sayfa açılınca: önce hatırlatmalar (butonlarda "Kuruldu" yazabilmek için), sonra olaylar
+hatirlatmalariGetir().then(olaylariGetir);

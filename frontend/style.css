@@ -233,10 +233,60 @@ a { color: var(--vurgu); }
   .olay-gorsel, .olay-ikon { flex-basis: 52px; width: 52px; height: 52px; font-size: 1.5rem; }
 }
 
+/* ===== Hatırlatmalar ===== */
+.arac-cubugu { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.hatirlatmalarim-butonu, .hatirlat-butonu, .kucuk-buton, .ana-buton {
+  background: #0d1430;
+  color: var(--yazi);
+  border: 1px solid var(--kenar);
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+}
+.hatirlatmalarim-butonu { padding: 6px 14px; }
+.hatirlatmalarim-butonu:hover, .hatirlat-butonu:hover, .kucuk-buton:hover { border-color: var(--vurgu); }
+.hatirlat-butonu { margin-top: 8px; padding: 3px 12px; font-size: 0.82rem; display: inline-block; }
+.hatirlat-butonu.kurulu { background: rgba(92, 214, 140, 0.15); border-color: rgba(92, 214, 140, 0.5); }
+.kucuk-buton { padding: 3px 10px; font-size: 0.82rem; }
+.ana-buton {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--vurgu);
+  color: #0a0f24;
+  border-color: var(--vurgu);
+  font-weight: 700;
+}
+.ana-buton:hover { filter: brightness(1.1); }
+
+.secenekler { display: flex; flex-direction: column; gap: 6px; }
+.secenek-satiri {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--kenar);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.secenek-satiri.pasif { opacity: 0.45; cursor: not-allowed; }
+.secenek-satiri .kucuk-buton { margin-left: auto; }
+.form-mesaji { color: var(--soluk-yazi); font-size: 0.9rem; min-height: 1em; }
+
+.hatirlatma-satiri {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--kenar);
+}
+.detay-penceresi h4 { margin: 16px 0 4px; color: var(--soluk-yazi); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.detay-penceresi code { background: rgba(255, 255, 255, 0.08); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+
 /* ===== Görünüm seçici (Liste / Takvim) ===== */
 .gorunum-secici {
   display: inline-flex;
-  margin-top: 16px;
   border: 1px solid var(--kenar);
   border-radius: 999px;
   overflow: hidden;

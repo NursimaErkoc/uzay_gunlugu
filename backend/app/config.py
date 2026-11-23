@@ -14,3 +14,15 @@ PROJE_KLASORU = Path(__file__).resolve().parents[2]
 load_dotenv(PROJE_KLASORU / ".env")
 
 NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
+
+# --- Veritabanı ---
+VERITABANI = PROJE_KLASORU / "uzay_gunlugu.db"   # .gitignore'da (*.db), GitHub'a gitmez
+
+# --- E-posta (Gmail) ---
+GMAIL_ADRESI = os.getenv("GMAIL_ADRESI", "").strip()
+GMAIL_UYGULAMA_SIFRESI = os.getenv("GMAIL_UYGULAMA_SIFRESI", "").replace(" ", "")  # Google boşluklu gösteriyor
+# Hatırlatmalar kime gitsin? Boş bırakılırsa Gmail adresinin kendisine.
+HATIRLATMA_ALICISI = os.getenv("HATIRLATMA_ALICISI", "").strip() or GMAIL_ADRESI
+
+# E-postadaki "takvimi aç" linki için sitenin adresi
+SITE_ADRESI = os.getenv("SITE_ADRESI", "http://127.0.0.1:8000").rstrip("/")
