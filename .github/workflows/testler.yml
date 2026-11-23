@@ -1,0 +1,28 @@
+# GitHub Actions: her push'ta ve her Pull Request'te testleri GitHub'ın bilgisayarında çalıştırır.
+# Sonuç GitHub'da commit'in yanında ✅ (geçti) veya ❌ (kaldı) olarak görünür.
+
+name: Testler
+
+on:                       # Ne zaman çalışsın?
+  push:                   # herhangi bir dala push yapılınca
+  pull_request:           # Pull Request açılınca / güncellenince
+
+jobs:
+  test:
+    runs-on: ubuntu-latest          # GitHub'ın ücretsiz Linux bilgisayarı
+
+    steps:
+      - name: Kodu indir
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip                # paketleri önbelleğe al, sonraki çalışmalar hızlı olsun
+
+      - name: Paketleri yükle
+        run: pip install -r requirements-dev.txt
+
+      - name: Testleri çalıştır
+        run: pytest -v

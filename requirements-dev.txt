@@ -1,0 +1,3 @@
+# Geliştirme sırasında gereken ek paketler (sitenin çalışması için gerekmez)
+-r requirements.txt
+pytest
