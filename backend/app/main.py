@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 
 from app import db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import events, facts, nasa, news, reminders
+from app.services import ceviri, events, facts, nasa, news, reminders
 
 
 # ---------------------------------------------------------------------
@@ -55,10 +55,23 @@ app = FastAPI(
 )
 
 
+@app.middleware("http")
+async def tarayici_onbellegi(istek, sonraki):
+    """
+    Sayfa dosyaları (HTML/CSS/JS) için tarayıcıya "her seferinde değişmiş mi diye sor" diyoruz.
+    Yoksa site güncellendiğinde tarayıcı eski style.css'i yeni sayfayla kullanabilir ve görünüm bozulur.
+    Dosya değişmediyse sunucu kısa bir "304 Değişmedi" cevabı verir; yani yavaşlatmaz.
+    """
+    cevap = await sonraki(istek)
+    if not istek.url.path.startswith("/api/"):
+        cevap.headers["Cache-Control"] = "no-cache"
+    return cevap
+
+
 @app.get("/api/saglik", tags=["Genel"])
 def saglik_kontrolu():
-    """Sunucu ayakta mı? Basit bir kontrol."""
-    return {"durum": "çalışıyor"}
+    """Sunucu ayakta mı? Dış servislerin son hataları da burada görünür (sorun ararken işe yarar)."""
+    return {"durum": "çalışıyor", "ceviri_son_hatalar": ceviri.son_hatalar}
 
 
 @app.get("/api/apod", tags=["NASA"])

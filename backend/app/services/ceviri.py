@@ -1,22 +1,36 @@
 """
 Çeviri servisi: İngilizce metni Türkçeye çevirir.
 
-Google Translate'in ücretsiz, anahtarsız uç noktasını kullanıyoruz.
-Bu "resmi olmayan" bir uç nokta: bir gün değişebilir. O yüzden hata olursa
-None döndürüyoruz ve site sadece İngilizce metni gösteriyor (çökmüyor).
-İleride istersen resmi bir servise (ör. DeepL) geçmek için sadece bu dosyayı değiştirmek yeterli.
+Sırayla şunlara bakar:
+  1) Hafızadaki önbellek          (en hızlı)
+  2) Veritabanındaki çeviriler    (kalıcı: sunucu yeniden başlasa da kaybolmaz)
+  3) Google Translate (ücretsiz, resmi olmayan uç nokta)
+  4) MyMemory (yedek: Google cevap vermezse)
+
+Neden veritabanı? Render'ın ücretsiz sunucusu uyuyup uyanınca diski siliniyor. Çevirileri
+sadece diskte tutunca her uyanışta yüzlerce metni baştan çevirtiyorduk; bu kadar çok istek
+gelince ücretsiz servisler bizi engelliyor. Artık her metin ömründe BİR KEZ çevriliyor.
+
+Çeviri tamamen başarısız olursa None döner ve site İngilizce metni gösterir (çökmez).
 """
 import asyncio
+import hashlib
+import html
+import re
+from datetime import datetime, timezone
 
 import httpx
 
-from app import cache
+from app import cache, db
 
-CEVIRI_URL = "https://translate.googleapis.com/translate_a/single"
+GOOGLE_URL = "https://translate.googleapis.com/translate_a/single"
+MYMEMORY_URL = "https://api.mymemory.translated.net/get"
 
-# Aynı anda en fazla 5 çeviri isteği gitsin. 70 isteği birden gönderirsek
-# servis bizi "saldırı" sanıp engelleyebilir. Semaphore = "aynı anda en fazla N kişi" kapısı.
+# Aynı anda en fazla 5 çeviri isteği gitsin (servisler toplu isteği saldırı sanabilir)
 _kapi = asyncio.Semaphore(5)
+
+# Her servisin son hatası. /api/saglik bunu gösterir: canlı sitede sorunu görebilmek için.
+son_hatalar: dict[str, str | None] = {"google": None, "mymemory": None}
 
 
 async def turkceye_cevir(metin: str | None) -> str | None:
@@ -24,30 +38,107 @@ async def turkceye_cevir(metin: str | None) -> str | None:
     if not metin:
         return None
 
-    # Aynı metni daha önce çevirdiysek tekrar sorma
-    onbellek_anahtari = f"ceviri:{metin}"
-    kayitli = cache.getir(onbellek_anahtari)
+    # Uzun metinleri anahtar olarak kullanmak yerine kısa bir "parmak izi" (hash) üretiyoruz
+    anahtar = hashlib.sha256(metin.encode("utf-8")).hexdigest()
+
+    # 1) Hafıza
+    kayitli = cache.getir(f"ceviri:{anahtar}")
     if kayitli is not None:
         return kayitli
 
-    parametreler = {
-        "client": "gtx",
-        "sl": "en",   # kaynak dil (source language)
-        "tl": "tr",   # hedef dil (target language)
-        "dt": "t",    # "bize çeviriyi ver"
-        "q": metin,
-    }
-    try:
+    # 2) Veritabanı
+    kayitli = _veritabanindan_oku(anahtar)
+    if kayitli is None:
+        # 3-4) Çeviri servisleri: önce Google, olmazsa MyMemory
         async with _kapi:
-            async with httpx.AsyncClient(timeout=15) as istemci:
-                # Uzun metinlerde GET adresi çok uzar, o yüzden POST ile gönderiyoruz
-                cevap = await istemci.post(CEVIRI_URL, data=parametreler)
-        cevap.raise_for_status()   # 200 değilse hata fırlat
-        # Cevap iç içe listeler: [[["Çeviri cümle 1", "Original 1", ...], ["Çeviri cümle 2", ...]], ...]
-        cumleler = cevap.json()[0]
-        sonuc = "".join(cumle[0] for cumle in cumleler if cumle[0])
-    except Exception:
-        return None
+            kayitli = await _google_ile(metin) or await _mymemory_ile(metin)
+        if kayitli is None:
+            return None
+        _veritabanina_yaz(anahtar, kayitli)
 
-    cache.kaydet(onbellek_anahtari, sonuc, 7 * 24 * 60 * 60, kalici=True)   # 1 hafta, diskte de
-    return sonuc
+    cache.kaydet(f"ceviri:{anahtar}", kayitli, 7 * 24 * 60 * 60)
+    return kayitli
+
+
+# ---------------------------------------------------------------------
+# Veritabanı
+# ---------------------------------------------------------------------
+def _veritabanindan_oku(anahtar: str) -> str | None:
+    try:
+        with db.baglan() as baglanti:
+            satir = baglanti.execute("SELECT ceviri FROM ceviriler WHERE anahtar = ?", (anahtar,)).fetchone()
+        return satir["ceviri"] if satir else None
+    except Exception:
+        return None   # veritabanına ulaşılamazsa çeviri servisine sorulur
+
+
+def _veritabanina_yaz(anahtar: str, ceviri: str) -> None:
+    try:
+        with db.baglan() as baglanti:
+            # ON CONFLICT DO NOTHING: aynı anahtar zaten varsa hata verme, geç
+            baglanti.execute(
+                "INSERT INTO ceviriler (anahtar, ceviri, olusturma) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+                (anahtar, ceviri, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+            )
+    except Exception:
+        pass   # kaydedemezsek de çeviriyi kullanmaya devam ederiz
+
+
+# ---------------------------------------------------------------------
+# Çeviri servisleri
+# ---------------------------------------------------------------------
+async def _google_ile(metin: str) -> str | None:
+    parametreler = {"client": "gtx", "sl": "en", "tl": "tr", "dt": "t", "q": metin}
+    try:
+        async with httpx.AsyncClient(timeout=15) as istemci:
+            # Uzun metinlerde GET adresi çok uzar, o yüzden POST ile gönderiyoruz
+            cevap = await istemci.post(GOOGLE_URL, data=parametreler)
+        if cevap.status_code != 200:
+            son_hatalar["google"] = f"HTTP {cevap.status_code}"
+            return None
+        # Cevap iç içe listeler: [[["Çeviri cümle 1", "Original 1", ...], ...], ...]
+        sonuc = "".join(cumle[0] for cumle in cevap.json()[0] if cumle[0])
+    except Exception as hata:
+        son_hatalar["google"] = type(hata).__name__
+        return None
+    son_hatalar["google"] = None
+    return sonuc or None
+
+
+async def _mymemory_ile(metin: str) -> str | None:
+    """MyMemory tek seferde en fazla ~500 karakter çeviriyor; uzun metni cümle cümle parçalara bölüyoruz."""
+    parcalar = _parcala(metin, 450)
+    cevrilenler = []
+    try:
+        async with httpx.AsyncClient(timeout=20) as istemci:
+            for parca in parcalar:
+                cevap = await istemci.get(MYMEMORY_URL, params={"q": parca, "langpair": "en|tr"})
+                veri = cevap.json() if cevap.status_code == 200 else {}
+                # MyMemory hata durumunu (ör. günlük kota doldu) cevabın içinde bildiriyor
+                if str(veri.get("responseStatus")) != "200" or veri.get("quotaFinished"):
+                    son_hatalar["mymemory"] = f"durum {veri.get('responseStatus', cevap.status_code)}"
+                    return None
+                cevrilenler.append(html.unescape(veri["responseData"]["translatedText"]))
+    except Exception as hata:
+        son_hatalar["mymemory"] = type(hata).__name__
+        return None
+    son_hatalar["mymemory"] = None
+    return " ".join(cevrilenler)
+
+
+def _parcala(metin: str, en_fazla: int) -> list[str]:
+    """Metni cümle sınırlarından, her biri en_fazla karakteri geçmeyecek parçalara böler."""
+    cumleler = re.split(r"(?<=[.!?])\s+", metin.strip())
+    parcalar, simdiki = [], ""
+    for cumle in cumleler:
+        while len(cumle) > en_fazla:            # tek başına çok uzun cümle: zorla böl
+            parcalar.append(cumle[:en_fazla])
+            cumle = cumle[en_fazla:]
+        if simdiki and len(simdiki) + 1 + len(cumle) > en_fazla:
+            parcalar.append(simdiki)
+            simdiki = cumle
+        else:
+            simdiki = f"{simdiki} {cumle}".strip()
+    if simdiki:
+        parcalar.append(simdiki)
+    return parcalar

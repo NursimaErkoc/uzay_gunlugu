@@ -114,3 +114,11 @@ def tablolari_olustur() -> None:
                 UNIQUE (olay_id, ne_zaman)          -- aynı olay için aynı hatırlatma iki kez kurulamaz
             )
         """)
+        # Çeviriler: her metin bir kez çevrilir ve burada saklanır (services/ceviri.py)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS ceviriler (
+                anahtar    TEXT PRIMARY KEY,   -- İngilizce metnin parmak izi (SHA-256)
+                ceviri     TEXT NOT NULL,      -- Türkçe çevirisi
+                olusturma  TEXT NOT NULL
+            )
+        """)
