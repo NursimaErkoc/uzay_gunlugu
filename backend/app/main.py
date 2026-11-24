@@ -32,7 +32,7 @@ async def zamanlayici():
         try:
             sayi = await reminders.bekleyenleri_gonder()
             if sayi:
-                print(f"[zamanlayıcı] {sayi} hatırlatma e-postası gönderildi 📧")
+                print(f"[zamanlayıcı] {sayi} hatırlatma e-postası gönderildi")
         except Exception as hata:   # zamanlayıcı asla tamamen durmasın
             print(f"[zamanlayıcı] hata: {hata}")
         await asyncio.sleep(60)
@@ -58,7 +58,7 @@ app = FastAPI(
 @app.get("/api/saglik", tags=["Genel"])
 def saglik_kontrolu():
     """Sunucu ayakta mı? Basit bir kontrol."""
-    return {"durum": "çalışıyor 🚀"}
+    return {"durum": "çalışıyor"}
 
 
 @app.get("/api/apod", tags=["NASA"])

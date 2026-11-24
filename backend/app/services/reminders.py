@@ -183,20 +183,19 @@ def _durum_degistir(hatirlatma_id: int, durum: str, sadece_su_durumdaysa: str | 
 # ---------------------------------------------------------------------
 def hatirlatma_epostasi(h: dict) -> tuple[str, str, str]:
     """(konu, düz metin, html) döndürür."""
-    ikon = h["ikon"] or "🔔"
     zaman = turkce_tarih(h["olay_tarihi"], h["kesinlik"])
     sure = {"1saat": "1 saat sonra", "1gun": "yarın", "1hafta": "1 hafta sonra"}[h["ne_zaman"]]
-    konu = f"{ikon} {h['baslik']} {sure}!"
+    konu = f"Hatırlatma: {h['baslik']} {sure}"
     firlatma_notu = ("Not: Fırlatma tarihleri son dakikada değişebilir. Güncel saati takvimden kontrol et."
                      if h["olay_id"].startswith("firlatma:") else "")
 
-    satirlar = [f"{ikon} {h['baslik']}", f"📅 {zaman} (Türkiye saati)"]
+    satirlar = [h["baslik"], f"{zaman} (Türkiye saati)"]
     if h["alt_bilgi"]:
         satirlar.append(h["alt_bilgi"])
     if h["aciklama"]:
         satirlar += ["", h["aciklama"]]
     if h["link"]:
-        satirlar += ["", f"📺 Canlı yayın: {h['link']}"]
+        satirlar += ["", f"Canlı yayın: {h['link']}"]
     if firlatma_notu:
         satirlar += ["", firlatma_notu]
     satirlar += ["", f"Uzay takvimi: {SITE_ADRESI}/events.html"]
@@ -204,34 +203,34 @@ def hatirlatma_epostasi(h: dict) -> tuple[str, str, str]:
 
     e = html.escape   # dışarıdan gelen metinleri HTML'e koymadan önce zararsızlaştır
     govde = f"""
-      <h1 style="margin:0 0 4px;font-size:22px;">{e(ikon)} {e(h['baslik'])}</h1>
-      <p style="margin:0 0 12px;color:#7c9cff;font-weight:600;">📅 {e(zaman)} (Türkiye saati)</p>
-      {f'<p style="margin:0 0 12px;color:#9aa4cc;font-size:14px;">{e(h["alt_bilgi"])}</p>' if h["alt_bilgi"] else ""}
-      {f'<p style="margin:0 0 16px;line-height:1.6;">{e(h["aciklama"])}</p>' if h["aciklama"] else ""}
-      {f'<p><a href="{e(h["link"])}" style="color:#7c9cff;">📺 Canlı yayını izle →</a></p>' if h["link"] else ""}
-      {f'<p style="color:#ffcc66;font-size:13px;">{e(firlatma_notu)}</p>' if firlatma_notu else ""}
+      <h1 style="margin:0 0 6px;font-size:22px;font-weight:600;line-height:1.3;">{e(h['baslik'])}</h1>
+      <p style="margin:0 0 14px;color:#8fa9ff;font-weight:600;letter-spacing:.02em;">{e(zaman)} · Türkiye saati</p>
+      {f'<p style="margin:0 0 14px;color:#8890b8;font-size:14px;">{e(h["alt_bilgi"])}</p>' if h["alt_bilgi"] else ""}
+      {f'<p style="margin:0 0 18px;line-height:1.65;color:#cfd4f0;">{e(h["aciklama"])}</p>' if h["aciklama"] else ""}
+      {f'<p><a href="{e(h["link"])}" style="color:#8fa9ff;">Canlı yayını izle &rarr;</a></p>' if h["link"] else ""}
+      {f'<p style="color:#f3c86f;font-size:13px;">{e(firlatma_notu)}</p>' if firlatma_notu else ""}
     """
     return konu, duz_metin, _sablon(govde)
 
 
 def test_epostasi() -> tuple[str, str, str]:
     govde = """
-      <h1 style="margin:0 0 8px;font-size:22px;">✅ E-posta ayarların çalışıyor!</h1>
-      <p style="line-height:1.6;">Bu bir test e-postası. Uzay takviminde kurduğun hatırlatmalar bu adrese gelecek. 🚀</p>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:600;">E-posta ayarların çalışıyor</h1>
+      <p style="line-height:1.65;color:#cfd4f0;">Bu bir test e-postası. Uzay takviminde kurduğun hatırlatmalar bu adrese gelecek.</p>
     """
-    return ("🚀 Uzay Günlüğü: test e-postası",
-            "E-posta ayarların çalışıyor! Hatırlatmalar bu adrese gelecek.",
+    return ("Uzay Günlüğü: test e-postası",
+            "E-posta ayarların çalışıyor. Hatırlatmalar bu adrese gelecek.",
             _sablon(govde))
 
 
 def _sablon(govde: str) -> str:
     """Tüm e-postalar için ortak çerçeve. E-postalarda CSS dosyası çalışmaz, stiller satır içi (inline) yazılır."""
     return f"""<!DOCTYPE html>
-<html><body style="margin:0;padding:24px;background:#070b1a;font-family:Segoe UI,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;background:#141c38;color:#e8ecff;border-radius:16px;padding:24px;border:1px solid #2a3566;">
-    <p style="margin:0 0 16px;color:#9aa4cc;font-size:13px;">🚀 UZAY GÜNLÜĞÜ · Hatırlatma</p>
+<html><body style="margin:0;padding:24px;background:#010208;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#080b1a;color:#e6e9fb;border-radius:18px;padding:28px;border:1px solid #1c2348;">
+    <p style="margin:0 0 20px;color:#8890b8;font-size:11px;letter-spacing:.28em;">UZAY GÜNLÜĞÜ &middot; HATIRLATMA</p>
     {govde}
-    <hr style="border:0;border-top:1px solid #2a3566;margin:20px 0;">
-    <a href="{html.escape(SITE_ADRESI)}/events.html" style="color:#7c9cff;font-size:14px;">Uzay takvimini aç →</a>
+    <hr style="border:0;border-top:1px solid #1c2348;margin:22px 0;">
+    <a href="{html.escape(SITE_ADRESI)}/events.html" style="color:#8fa9ff;font-size:14px;">Uzay takvimini aç &rarr;</a>
   </div>
 </body></html>"""

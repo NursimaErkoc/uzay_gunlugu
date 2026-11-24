@@ -4,45 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Uzay Takvimi · Uzay Günlüğü</title>
+  <meta name="theme-color" content="#010208">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="yildizlar" aria-hidden="true"></div>
-
   <header class="ust">
-    <h1>🚀 Uzay Günlüğü</h1>
+    <h1>Uzay Günlüğü</h1>
+    <p class="alt-baslik">Gökyüzü olayları · Fırlatmalar · Görevler</p>
     <nav class="menu">
-      <a href="index.html">📸 Günlük</a>
-      <a href="events.html" class="aktif">📅 Uzay Takvimi</a>
+      <a href="index.html"><span data-ikon="fotograf"></span>Günlük</a>
+      <a href="events.html" class="aktif"><span data-ikon="takvim"></span>Uzay Takvimi</a>
     </nav>
   </header>
 
   <main class="icerik">
     <section class="kart">
-      <!-- Ay seçici: ◀ Aralık 2026 ▶ -->
+      <!-- Ay seçici: ‹ Aralık 2026 › -->
       <div class="ay-secici">
-        <button id="onceki-ay" class="ok-butonu" aria-label="Önceki ay">◀</button>
+        <button id="onceki-ay" class="ok-butonu" aria-label="Önceki ay"><span data-ikon="sol"></span></button>
         <h2 id="ay-basligi">…</h2>
-        <button id="sonraki-ay" class="ok-butonu" aria-label="Sonraki ay">▶</button>
+        <button id="sonraki-ay" class="ok-butonu" aria-label="Sonraki ay"><span data-ikon="sag"></span></button>
       </div>
 
       <!-- Görünüm seçici: Liste / Takvim  +  Hatırlatmalarım -->
       <div class="arac-cubugu">
         <div class="gorunum-secici" id="gorunum-secici">
-          <button class="gorunum aktif" data-gorunum="liste">☰ Liste</button>
-          <button class="gorunum" data-gorunum="takvim">▦ Takvim</button>
+          <button class="gorunum aktif" data-gorunum="liste"><span data-ikon="liste"></span>Liste</button>
+          <button class="gorunum" data-gorunum="takvim"><span data-ikon="izgara"></span>Takvim</button>
         </div>
         <button class="hatirlatmalarim-butonu" data-eylem="hatirlatmalarim">
-          🔔 Hatırlatmalarım <span id="hatirlatma-sayisi"></span>
+          <span data-ikon="zil"></span>Hatırlatmalarım <span id="hatirlatma-sayisi"></span>
         </button>
       </div>
 
       <!-- Filtreler -->
       <div class="filtreler" id="filtreler">
         <button class="filtre aktif" data-tur="hepsi">Hepsi</button>
-        <button class="filtre" data-tur="gokyuzu">🔭 Gökyüzü</button>
-        <button class="filtre" data-tur="firlatma">🚀 Fırlatmalar</button>
-        <button class="filtre" data-tur="etkinlik">🛰️ Uzay Etkinlikleri</button>
+        <button class="filtre" data-tur="gokyuzu"><span data-ikon="uzanim"></span>Gökyüzü</button>
+        <button class="filtre" data-tur="firlatma"><span data-ikon="roket"></span>Fırlatmalar</button>
+        <button class="filtre" data-tur="etkinlik"><span data-ikon="uydu"></span>Uzay Etkinlikleri</button>
       </div>
       <label class="secenek">
         <input type="checkbox" id="starlink-goster"> Starlink fırlatmalarını da göster
@@ -50,14 +53,12 @@
       <p class="aciklama-notu">Saatler Türkiye saatine (UTC+3) göredir.</p>
     </section>
 
-    <div id="olay-listesi">
-      <p class="yukleniyor">Takvim hazırlanıyor... 🗓️<br><small>İlk açılışta çeviriler yüzünden biraz sürebilir.</small></p>
-    </div>
+    <div id="olay-listesi"></div>
   </main>
 
   <!-- Ayrıntı penceresi: takvimde bir olaya tıklayınca açılır (<dialog> = tarayıcının hazır pencere elemanı) -->
   <dialog id="detay" class="detay-penceresi">
-    <button class="kapat" id="detay-kapat" aria-label="Kapat">✕</button>
+    <button class="kapat" id="detay-kapat" aria-label="Kapat"><span data-ikon="kapat"></span></button>
     <div id="detay-icerik"></div>
   </dialog>
 
@@ -66,6 +67,7 @@
     Gökyüzü hesaplamaları: <a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noopener">Astronomy Engine</a>
   </footer>
 
+  <script src="ortak.js"></script>
   <script src="events.js"></script>
 </body>
 </html>

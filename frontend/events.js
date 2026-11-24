@@ -1,6 +1,7 @@
 // =====================================================================
 // Uzay Takvimi sayfası
 // /api/events?ay=YYYY-AA adresinden ayın olaylarını çeker, güne göre gruplayıp gösterir.
+// ikon(), metinTemizle(), yukleniyorHtml(), hataHtml() -> ortak.js'den geliyor.
 // =====================================================================
 
 const SAAT_DILIMI = "Europe/Istanbul";
@@ -40,13 +41,13 @@ function yetkiliFetch(adres, ayarlar = {}) {
 }
 
 async function yoneticiGirisi() {
-  const girilen = prompt("🔑 Yönetici anahtarını gir:");
+  const girilen = prompt("Yönetici anahtarını gir:");
   if (!girilen) return;
   anahtarYaz(girilen.trim());
   await hatirlatmalariGetir();
   if (!durum.yetkili) {
     anahtarYaz("");
-    alert("Anahtar yanlış. 😕");
+    alert("Anahtar yanlış.");
   }
   listeyiCiz();
   hatirlatmalarimPenceresiAc();
@@ -76,22 +77,21 @@ async function olaylariGetir() {
   const ayMetni = aktifAy();   // 2026-12
   ayBasligi.textContent = new Date(durum.yil, durum.ay - 1, 1)
     .toLocaleDateString("tr-TR", { month: "long", year: "numeric" });     // "Aralık 2026"
-  liste.innerHTML = `<p class="yukleniyor">Takvim hazırlanıyor... 🗓️<br>
-    <small>İlk açılışta çeviriler yüzünden biraz sürebilir.</small></p>`;
+  liste.innerHTML = yukleniyorHtml("Takvim hazırlanıyor", "İlk açılışta çeviriler yüzünden biraz sürebilir.");
 
   try {
     const cevap = await fetch(`/api/events?ay=${ayMetni}`);
     const veri = await cevap.json();
     if (!cevap.ok) throw new Error(veri.detail || "Bilinmeyen hata");
 
-    // Cevap gelene kadar kullanıcı ◀ ▶ ile başka aya geçtiyse bu eski cevabı gösterme
+    // Cevap gelene kadar kullanıcı ‹ › ile başka aya geçtiyse bu eski cevabı gösterme
     if (ayMetni !== aktifAy()) return;
 
     durum.olaylar = veri.olaylar;
     durum.eksik = veri.eksik;
     listeyiCiz();
   } catch (hata) {
-    liste.innerHTML = `<p class="hata">😕 Olaylar alınamadı.<br><small>${metinTemizle(hata.message)}</small></p>`;
+    liste.innerHTML = hataHtml("Olaylar alınamadı.", hata.message);
   }
 }
 
@@ -121,7 +121,8 @@ function listeyiCiz() {
   // 3) HTML'i oluştur
   let html = "";
   if (durum.eksik?.length) {
-    html += `<div class="not">ℹ️ Şu an ${durum.eksik.join(" ve ")} alınamadı, birkaç dakika sonra tekrar dene.</div>`;
+    html += `<div class="not">${ikon("uyari")}<span>Şu an ${durum.eksik.join(" ve ")} alınamadı,
+      birkaç dakika sonra tekrar dene.</span></div>`;
   }
 
   html += durum.gorunum === "takvim"
@@ -131,31 +132,30 @@ function listeyiCiz() {
   liste.innerHTML = html;
 }
 
+function belirsizlerHtml(belirsizler) {
+  if (!belirsizler.length) return "";
+  return `
+    <section class="gun-grubu">
+      <h3 class="gun-basligi">Bu ay içinde · kesin tarih henüz belli değil</h3>
+      ${belirsizler.map(olayKarti).join("")}
+    </section>`;
+}
+
 // --- Liste görünümü ---
 function listeHtml(gunler, belirsizler, toplam) {
   let html = "";
   const bugun = gunAnahtari(new Date().toISOString());
   for (const [gun, olaylar] of Object.entries(gunler)) {
     const gecmis = gun < bugun ? " gecmis" : "";
-    const bugunMu = gun === bugun ? ` <span class="etiket">Bugün</span>` : "";
+    const bugunMu = gun === bugun ? `<span class="etiket">Bugün</span>` : "";
     html += `
       <section class="gun-grubu${gecmis}">
         <h3 class="gun-basligi">${gunBasligi(gun)}${bugunMu}</h3>
         ${olaylar.map(olayKarti).join("")}
       </section>`;
   }
-
-  if (belirsizler.length) {
-    html += `
-      <section class="gun-grubu">
-        <h3 class="gun-basligi">📌 Bu ay içinde (kesin tarih henüz belli değil)</h3>
-        ${belirsizler.map(olayKarti).join("")}
-      </section>`;
-  }
-
-  if (!toplam) {
-    html += `<p class="yukleniyor">Bu filtreye uyan olay yok. 🌌</p>`;
-  }
+  html += belirsizlerHtml(belirsizler);
+  if (!toplam) html += `<div class="yukleniyor">Bu filtreye uyan olay yok.</div>`;
   return html;
 }
 
@@ -171,7 +171,6 @@ function takvimHtml(gunler, belirsizler) {
   const bugun = gunAnahtari(new Date().toISOString());
 
   let hucreler = GUN_ADLARI.map((g) => `<div class="takvim-baslik">${g}</div>`).join("");
-
   for (let i = 0; i < bosHucre; i++) hucreler += `<div class="hucre bos"></div>`;
 
   for (let gunNo = 1; gunNo <= gunSayisi; gunNo++) {
@@ -184,7 +183,7 @@ function takvimHtml(gunler, belirsizler) {
 
     const cipler = olaylar.slice(0, HUCREDE_EN_FAZLA).map((o) => `
       <button class="cip cip-${o.tur}" data-id="${metinTemizle(o.id)}" title="${metinTemizle(o.baslik)}">
-        <span class="cip-ikon">${o.ikon}</span><span class="cip-metin">${metinTemizle(o.baslik)}</span>
+        ${ikon(o.ikon)}<span class="cip-metin">${metinTemizle(o.baslik)}</span>
       </button>`).join("");
     const kalan = olaylar.length - HUCREDE_EN_FAZLA;
     const daha = kalan > 0 ? `<button class="daha" data-gun="${anahtar}">+${kalan} daha</button>` : "";
@@ -192,21 +191,61 @@ function takvimHtml(gunler, belirsizler) {
     hucreler += `
       <div class="${siniflar}" data-gun="${anahtar}">
         <span class="gun-no">${gunNo}</span>
-        <span class="olay-sayisi">${olaylar.length || ""}</span>
         ${cipler}${daha}
       </div>`;
   }
 
-  let html = `<section class="kart takvim-karti"><div class="takvim">${hucreler}</div></section>`;
+  return `<section class="kart takvim-karti"><div class="takvim">${hucreler}</div></section>`
+    + belirsizlerHtml(belirsizler);
+}
 
-  if (belirsizler.length) {
-    html += `
-      <section class="gun-grubu">
-        <h3 class="gun-basligi">📌 Bu ay içinde (kesin tarih henüz belli değil)</h3>
-        ${belirsizler.map(olayKarti).join("")}
-      </section>`;
-  }
-  return html;
+// ---------------------------------------------------------------------
+// Tek bir olay kartı
+// ---------------------------------------------------------------------
+function olayKarti(o) {
+  const saat = {
+    dakika: saatYaz(o.tarih),
+    saat: "~" + saatYaz(o.tarih),
+    gun: "Gün boyu",
+    ay: "",
+  }[o.kesinlik];
+
+  const gorsel = o.gorsel
+    ? `<img class="olay-gorsel" src="${metinTemizle(o.gorsel)}" alt="" loading="lazy">`
+    : `<div class="olay-ikon">${ikon(o.ikon)}</div>`;
+
+  return `
+    <article class="olay olay-${o.tur}">
+      ${gorsel}
+      <div class="olay-govde">
+        <p class="olay-meta">
+          ${saat ? `<span class="olay-saat">${saat}</span>` : ""}
+          ${o.durum ? `<span class="durum durum-${metinTemizle(o.durum_kodu || "")}">${metinTemizle(o.durum)}</span>` : ""}
+          ${o.turkiyeden_gorunur ? `<span class="durum durum-gorunur">Türkiye'den görünür</span>` : ""}
+        </p>
+        <h4>${o.gorsel ? ikon(o.ikon) : ""}${metinTemizle(o.baslik)}</h4>
+        ${o.alt_bilgi ? `<p class="olay-alt">${metinTemizle(o.alt_bilgi)}</p>` : ""}
+        ${o.aciklama ? `<p class="olay-aciklama">${metinTemizle(o.aciklama)}</p>` : ""}
+        ${o.link ? `<a class="olay-linki" href="${metinTemizle(o.link)}" target="_blank" rel="noopener">${ikon("oynat")}Canlı yayın / video</a>` : ""}
+        ${hatirlatButonu(o)}
+      </div>
+    </article>`;
+}
+
+// Olay kartındaki "Hatırlat" butonu: kurulu hatırlatma varsa onu gösterir
+function hatirlatButonu(o) {
+  if (!hatirlatilabilir(o)) return "";
+  const kurulu = durum.hatirlatmalar.filter((h) => h.olay_id === o.id && h.durum === "bekliyor");
+  const metin = kurulu.length
+    ? `Hatırlatma kurulu: ${kurulu.map((h) => h.ne_zaman_metni).join(", ")}`
+    : "Hatırlat";
+  return `<button class="hatirlat-butonu${kurulu.length ? " kurulu" : ""}"
+            data-eylem="hatirlat" data-id="${metinTemizle(o.id)}">${ikon(kurulu.length ? "onay" : "zil")}${metin}</button>`;
+}
+
+// Tarihi belli ve henüz gerçekleşmemiş olaylar için hatırlatma kurulabilir (sadece yönetici)
+function hatirlatilabilir(o) {
+  return durum.yetkili && o.kesinlik !== "ay" && new Date(o.tarih) > new Date();
 }
 
 // ---------------------------------------------------------------------
@@ -215,11 +254,15 @@ function takvimHtml(gunler, belirsizler) {
 const detay = document.getElementById("detay");
 const detayIcerik = document.getElementById("detay-icerik");
 
+function pencereyiAc(html) {
+  detayIcerik.innerHTML = html;
+  if (!detay.open) detay.showModal();
+}
+
 function olayDetayiAc(id) {
   const olay = durum.olaylar.find((o) => o.id === id);
   if (!olay) return;
-  detayIcerik.innerHTML = `<h3 class="gun-basligi">${gunBasligi(gunAnahtari(olay.tarih))}</h3>${olayKarti(olay)}`;
-  detay.showModal();
+  pencereyiAc(`<h3 class="gun-basligi">${gunBasligi(gunAnahtari(olay.tarih))}</h3>${olayKarti(olay)}`);
 }
 
 function gunDetayiAc(gun) {
@@ -228,8 +271,7 @@ function gunDetayiAc(gun) {
     (durum.filtre === "hepsi" || o.tur === durum.filtre) &&
     (!o.starlink || durum.starlink));
   if (!olaylar.length) return;
-  detayIcerik.innerHTML = `<h3 class="gun-basligi">${gunBasligi(gun)}</h3>${olaylar.map(olayKarti).join("")}`;
-  detay.showModal();
+  pencereyiAc(`<h3 class="gun-basligi">${gunBasligi(gun)}</h3>${olaylar.map(olayKarti).join("")}`);
 }
 
 // ---------------------------------------------------------------------
@@ -271,7 +313,7 @@ function hatirlatmaPenceresiAc(olayId) {
   const secenekler = SECENEKLER.map((s) => {
     const varMi = kurulu.find((h) => h.ne_zaman === s.deger);
     if (varMi) {
-      return `<div class="secenek-satiri">✅ ${s.metin}
+      return `<div class="secenek-satiri">${ikon("onay")}${s.metin}
         <button class="kucuk-buton" data-eylem="sil" data-hid="${varMi.id}">Kaldır</button></div>`;
     }
     // Seçilemeyecek durumlar: zamanı geçmiş ya da saati belli değil
@@ -282,19 +324,18 @@ function hatirlatmaPenceresiAc(olayId) {
   }).join("");
 
   const uyari = durum.epostaAyarli ? "" :
-    `<div class="not">⚠️ E-posta ayarları henüz yapılmamış. Hatırlatmayı kurabilirsin ama
-     <code>.env</code> dosyasına Gmail bilgileri eklenene kadar e-posta gönderilmez.</div>`;
+    `<div class="not">${ikon("uyari")}<span>E-posta ayarları henüz yapılmamış. Hatırlatmayı kurabilirsin,
+     ama ayarlar yapılana kadar e-posta gönderilmez.</span></div>`;
 
-  detayIcerik.innerHTML = `
-    <h3 class="gun-basligi">🔔 Hatırlatma kur</h3>
-    <p><strong>${olay.ikon} ${metinTemizle(olay.baslik)}</strong><br>
+  pencereyiAc(`
+    <h3 class="gun-basligi">Hatırlatma kur</h3>
+    <p><strong>${metinTemizle(olay.baslik)}</strong><br>
        <small>${gunBasligi(gunAnahtari(olay.tarih))}${olay.kesinlik === "gun" ? "" : ", " + saatYaz(olay.tarih)}</small></p>
     ${uyari}
     <p>E-posta ne zaman gelsin?${durum.alici ? ` <small>(${metinTemizle(durum.alici)})</small>` : ""}</p>
     <div class="secenekler">${secenekler}</div>
     <p id="hatirlatma-mesaji" class="form-mesaji"></p>
-    <button class="ana-buton" data-eylem="kur" data-id="${metinTemizle(olay.id)}">Hatırlatmayı kur</button>`;
-  if (!detay.open) detay.showModal();
+    <button class="ana-buton" data-eylem="kur" data-id="${metinTemizle(olay.id)}">Hatırlatmayı kur</button>`);
 }
 
 async function hatirlatmaKur(olayId) {
@@ -312,13 +353,13 @@ async function hatirlatmaKur(olayId) {
   });
   const veri = await cevap.json();
   if (!cevap.ok) {
-    mesaj.textContent = "😕 " + (typeof veri.detail === "string" ? veri.detail : "Kurulamadı");
+    mesaj.textContent = typeof veri.detail === "string" ? veri.detail : "Kurulamadı.";
     return;
   }
   await hatirlatmalariGetir();
   listeyiCiz();
   hatirlatmaPenceresiAc(olayId);   // pencereyi güncel haliyle yeniden çiz
-  document.getElementById("hatirlatma-mesaji").textContent = `✅ Kuruldu! ${veri.ne_zaman_metni} e-posta gelecek.`;
+  document.getElementById("hatirlatma-mesaji").textContent = `Kuruldu. ${veri.ne_zaman_metni} e-posta gelecek.`;
 }
 
 async function hatirlatmaSil(hatirlatmaId) {
@@ -330,45 +371,42 @@ async function hatirlatmaSil(hatirlatmaId) {
 // Tüm hatırlatmaların listesi
 function hatirlatmalarimPenceresiAc() {
   if (!durum.yetkili) {
-    detayIcerik.innerHTML = `
-      <h3 class="gun-basligi">🔔 Hatırlatmalar</h3>
+    pencereyiAc(`
+      <h3 class="gun-basligi">Hatırlatmalar</h3>
       <p>Hatırlatmalar sadece sitenin sahibine açık.</p>
-      <button class="ana-buton" data-eylem="giris">🔑 Yönetici girişi</button>`;
-    if (!detay.open) detay.showModal();
+      <button class="ana-buton" data-eylem="giris">${ikon("anahtar")}Yönetici girişi</button>`);
     return;
   }
 
   const bekleyen = durum.hatirlatmalar.filter((h) => h.durum === "bekliyor");
   const gecmis = durum.hatirlatmalar.filter((h) => h.durum !== "bekliyor").slice(0, 10);
-  const durumMetni = { gonderildi: "📧 gönderildi", kacirildi: "⏭️ zamanında gönderilemedi" };
+  const durumMetni = { gonderildi: "gönderildi", kacirildi: "zamanında gönderilemedi", gonderiliyor: "gönderiliyor" };
 
   const satir = (h) => `
     <div class="hatirlatma-satiri">
       <div>
-        <strong>${metinTemizle(h.ikon || "🔔")} ${metinTemizle(h.baslik)}</strong><br>
+        <strong>${ikon(h.ikon)}${metinTemizle(h.baslik)}</strong><br>
         <small>${gunBasligi(gunAnahtari(h.olay_tarihi))} · ${h.durum === "bekliyor"
           ? h.ne_zaman_metni : durumMetni[h.durum] || h.durum}</small>
       </div>
-      <button class="kucuk-buton" data-eylem="sil" data-hid="${h.id}" aria-label="Sil">🗑️</button>
+      <button class="kucuk-buton" data-eylem="sil" data-hid="${h.id}" aria-label="Sil">${ikon("sil")}</button>
     </div>`;
 
   const epostaDurumu = durum.epostaAyarli
-    ? `<p class="form-mesaji">📧 E-postalar şu adrese gidiyor: <strong>${metinTemizle(durum.alici)}</strong></p>
-       <button class="kucuk-buton" data-eylem="test">Test e-postası gönder</button>`
-    : `<div class="not">⚠️ E-posta ayarları yapılmamış. <code>.env</code> dosyasına
-       <code>GMAIL_ADRESI</code> ve <code>GMAIL_UYGULAMA_SIFRESI</code> eklenip sunucu yeniden başlatılmalı.</div>`;
+    ? `<p class="form-mesaji">E-postalar şu adrese gidiyor: <strong>${metinTemizle(durum.alici)}</strong></p>
+       <button class="kucuk-buton" data-eylem="test">${ikon("eposta")}Test e-postası gönder</button>`
+    : `<div class="not">${ikon("uyari")}<span>E-posta ayarları yapılmamış.</span></div>`;
 
   const cikis = durum.anahtarGerekli
-    ? ` <button class="kucuk-buton" data-eylem="cikis">Çıkış yap</button>` : "";
+    ? `<button class="kucuk-buton" data-eylem="cikis">Çıkış yap</button>` : "";
 
-  detayIcerik.innerHTML = `
-    <h3 class="gun-basligi">🔔 Hatırlatmalarım${cikis}</h3>
+  pencereyiAc(`
+    <h3 class="gun-basligi">Hatırlatmalarım${cikis}</h3>
     ${epostaDurumu}
     <p id="hatirlatma-mesaji" class="form-mesaji"></p>
     <h4>Bekleyen</h4>
-    ${bekleyen.length ? bekleyen.map(satir).join("") : `<p class="form-mesaji">Henüz hatırlatma yok. Bir olaydaki 🔔 butonuna tıkla.</p>`}
-    ${gecmis.length ? `<h4>Geçmiş</h4>${gecmis.map(satir).join("")}` : ""}`;
-  if (!detay.open) detay.showModal();
+    ${bekleyen.length ? bekleyen.map(satir).join("") : `<p class="form-mesaji">Henüz hatırlatma yok. Bir olaydaki "Hatırlat" butonuna tıkla.</p>`}
+    ${gecmis.length ? `<h4>Geçmiş</h4>${gecmis.map(satir).join("")}` : ""}`);
 }
 
 async function testEpostasiGonder() {
@@ -376,10 +414,14 @@ async function testEpostasiGonder() {
   mesaj.textContent = "Gönderiliyor...";
   const cevap = await yetkiliFetch("/api/reminders/test", { method: "POST" });
   const veri = await cevap.json();
-  mesaj.textContent = cevap.ok ? `✅ ${veri.mesaj}. Gelen kutunu kontrol et!` : `😕 ${veri.detail}`;
+  mesaj.textContent = cevap.ok ? `${veri.mesaj}. Gelen kutunu kontrol et.` : veri.detail;
 }
 
-// Tüm hatırlatma butonları için tek dinleyici (data-eylem="..." ile hangi iş olduğunu anlıyoruz)
+// ---------------------------------------------------------------------
+// Tıklamalar
+// ---------------------------------------------------------------------
+
+// Hatırlatma butonları için tek dinleyici (data-eylem="..." ile hangi iş olduğunu anlıyoruz)
 document.addEventListener("click", async (e) => {
   const buton = e.target.closest("[data-eylem]");
   if (!buton) return;
@@ -422,85 +464,6 @@ liste.addEventListener("click", (e) => {
   if (hucre && window.matchMedia("(max-width: 640px)").matches) gunDetayiAc(hucre.dataset.gun);
 });
 
-// Tek bir olay kartı
-function olayKarti(o) {
-  const saat = {
-    dakika: saatYaz(o.tarih),
-    saat: "~" + saatYaz(o.tarih),
-    gun: "Gün boyu",
-    ay: "",
-  }[o.kesinlik];
-
-  const gorsel = o.gorsel
-    ? `<img class="olay-gorsel" src="${metinTemizle(o.gorsel)}" alt="" loading="lazy">`
-    : `<div class="olay-ikon">${o.ikon}</div>`;
-
-  return `
-    <article class="olay olay-${o.tur}">
-      ${gorsel}
-      <div class="olay-govde">
-        <p class="olay-meta">
-          ${saat ? `<span class="olay-saat">${saat}</span>` : ""}
-          ${o.durum ? `<span class="etiket">${metinTemizle(o.durum)}</span>` : ""}
-          ${o.turkiyeden_gorunur ? `<span class="etiket etiket-yesil">🇹🇷 Türkiye'den görünür</span>` : ""}
-        </p>
-        <h4>${o.ikon} ${metinTemizle(o.baslik)}</h4>
-        ${o.alt_bilgi ? `<p class="olay-alt">${metinTemizle(o.alt_bilgi)}</p>` : ""}
-        ${o.aciklama ? `<p class="olay-aciklama">${metinTemizle(o.aciklama)}</p>` : ""}
-        ${o.link ? `<a href="${metinTemizle(o.link)}" target="_blank" rel="noopener">📺 Canlı yayın / video →</a>` : ""}
-        ${hatirlatButonu(o)}
-      </div>
-    </article>`;
-}
-
-// Olay kartındaki 🔔 butonu: kurulu hatırlatma varsa onu gösterir
-function hatirlatButonu(o) {
-  if (!hatirlatilabilir(o)) return "";
-  const kurulu = durum.hatirlatmalar.filter((h) => h.olay_id === o.id && h.durum === "bekliyor");
-  const metin = kurulu.length
-    ? `🔔 Kuruldu: ${kurulu.map((h) => h.ne_zaman_metni).join(", ")}`
-    : "🔔 Hatırlat";
-  return `<button class="hatirlat-butonu${kurulu.length ? " kurulu" : ""}"
-            data-eylem="hatirlat" data-id="${metinTemizle(o.id)}">${metin}</button>`;
-}
-
-// Tarihi belli ve henüz gerçekleşmemiş olaylar için hatırlatma kurulabilir (sadece yönetici)
-function hatirlatilabilir(o) {
-  return durum.yetkili && o.kesinlik !== "ay" && new Date(o.tarih) > new Date();
-}
-
-// ---------------------------------------------------------------------
-// Tarih yardımcıları (hepsi Türkiye saatine göre)
-// ---------------------------------------------------------------------
-
-// "2026-12-24T01:28:45Z" -> "2026-12-24" (Türkiye saatine göre hangi gün?)
-function gunAnahtari(isoTarih) {
-  return new Date(isoTarih).toLocaleDateString("en-CA", { timeZone: SAAT_DILIMI });   // en-CA = YYYY-MM-DD biçimi
-}
-
-// "2026-12-24" -> "24 Aralık Perşembe"
-function gunBasligi(gun) {
-  return new Date(gun + "T12:00:00").toLocaleDateString("tr-TR", {
-    day: "numeric", month: "long", weekday: "long",
-  });
-}
-
-// "2026-12-24T01:28:45Z" -> "04:28"
-function saatYaz(isoTarih) {
-  return new Date(isoTarih).toLocaleTimeString("tr-TR", {
-    hour: "2-digit", minute: "2-digit", timeZone: SAAT_DILIMI,
-  });
-}
-
-function metinTemizle(metin) {
-  const div = document.createElement("div");
-  div.textContent = metin ?? "";
-  return div.innerHTML.replaceAll('"', "&quot;");
-}
-
-// ---------------------------------------------------------------------
-// Olaylar (kullanıcı etkileşimleri)
-// ---------------------------------------------------------------------
 document.getElementById("onceki-ay").addEventListener("click", () => {
   durum.ay -= 1;
   if (durum.ay < 1) { durum.ay = 12; durum.yil -= 1; }
@@ -544,5 +507,28 @@ gorunumButonlari.forEach((buton) => {
 });
 gorunumButonlariniGuncelle();
 
-// Sayfa açılınca: önce hatırlatmalar (butonlarda "Kuruldu" yazabilmek için), sonra olaylar
+// ---------------------------------------------------------------------
+// Tarih yardımcıları (hepsi Türkiye saatine göre)
+// ---------------------------------------------------------------------
+
+// "2026-12-24T01:28:45Z" -> "2026-12-24" (Türkiye saatine göre hangi gün?)
+function gunAnahtari(isoTarih) {
+  return new Date(isoTarih).toLocaleDateString("en-CA", { timeZone: SAAT_DILIMI });   // en-CA = YYYY-MM-DD biçimi
+}
+
+// "2026-12-24" -> "24 Aralık Perşembe"
+function gunBasligi(gun) {
+  return new Date(gun + "T12:00:00").toLocaleDateString("tr-TR", {
+    day: "numeric", month: "long", weekday: "long",
+  });
+}
+
+// "2026-12-24T01:28:45Z" -> "04:28"
+function saatYaz(isoTarih) {
+  return new Date(isoTarih).toLocaleTimeString("tr-TR", {
+    hour: "2-digit", minute: "2-digit", timeZone: SAAT_DILIMI,
+  });
+}
+
+// Sayfa açılınca: önce hatırlatmalar (butonlarda "kurulu" yazabilmek için), sonra olaylar
 hatirlatmalariGetir().then(olaylariGetir);
