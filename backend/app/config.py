@@ -25,7 +25,10 @@ VERITABANI = PROJE_KLASORU / "uzay_gunlugu.db"   # .gitignore'da (*.db), GitHub'
 # Boşsa (bilgisayarında) herkes kullanabilir.
 YONETICI_ANAHTARI = os.getenv("YONETICI_ANAHTARI", "").strip()
 
-# --- E-posta (Gmail) ---
+# --- E-posta ---
+# İnternette (Render): Resend API anahtarı. Render ücretsiz planda Gmail SMTP'yi engellediği için.
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "").strip()
+# Bilgisayarında: Gmail SMTP
 GMAIL_ADRESI = os.getenv("GMAIL_ADRESI", "").strip()
 GMAIL_UYGULAMA_SIFRESI = os.getenv("GMAIL_UYGULAMA_SIFRESI", "").replace(" ", "")  # Google boşluklu gösteriyor
 # Hatırlatmalar kime gitsin? Boş bırakılırsa Gmail adresinin kendisine.
