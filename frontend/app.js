@@ -1,6 +1,7 @@
 // =====================================================================
-// Uzay Günlüğü - frontend JavaScript
-// Görevi: Kendi API'mizden (/api/apod) veriyi çekip sayfaya yerleştirmek.
+// Uzay Günlüğü - ana sayfa
+// Görevi: Kendi API'mizden veriyi çekip sayfaya yerleştirmek.
+// ikon(), metinTemizle(), yukleniyorHtml(), hataHtml() -> ortak.js'den geliyor.
 // =====================================================================
 
 // Sayfadaki elemanları bul (DOM = sayfanın JavaScript'teki karşılığı)
@@ -11,11 +12,11 @@ const tarihKutusu = document.getElementById("tarih");
 tarihKutusu.max = new Date().toISOString().slice(0, 10);
 
 // ---------------------------------------------------------------------
-// 1) API'den veri çeken fonksiyon
+// 1) Günün fotoğrafı
 //    async/await: "cevap gelene kadar bekle, ama sayfayı dondurma"
 // ---------------------------------------------------------------------
 async function apodGetir(tarih) {
-  apodKutusu.innerHTML = `<p class="yukleniyor">Uzaydan veri geliyor... 🛰️</p>`;
+  apodKutusu.innerHTML = yukleniyorHtml("Uzaydan veri geliyor");
 
   // Tarih seçildiyse adrese ekle: /api/apod?tarih=2024-04-08
   const adres = tarih ? `/api/apod?tarih=${tarih}` : "/api/apod";
@@ -23,23 +24,15 @@ async function apodGetir(tarih) {
   try {
     const cevap = await fetch(adres);          // isteği gönder
     const veri = await cevap.json();           // gelen JSON'u JavaScript nesnesine çevir
-
-    if (!cevap.ok) {                           // 200 değilse hata göster
-      throw new Error(veri.detail || "Bilinmeyen hata");
-    }
-
+    if (!cevap.ok) throw new Error(veri.detail || "Bilinmeyen hata");
     apodGoster(veri);
   } catch (hata) {
-    apodKutusu.innerHTML = `
-      <p class="hata">😕 Fotoğraf alınamadı.<br><small>${metinTemizle(hata.message)}</small></p>`;
+    apodKutusu.innerHTML = hataHtml("Fotoğraf alınamadı.", hata.message);
   }
 }
 
-// ---------------------------------------------------------------------
-// 2) Gelen veriyi HTML'e dönüştürüp sayfaya koyan fonksiyon
-// ---------------------------------------------------------------------
+// Gelen veriyi HTML'e dönüştürüp sayfaya koyan fonksiyon
 function apodGoster(veri) {
-  // Fotoğraf mı video mu?
   const kaynak = metinTemizle(veri.kaynak);
   let medya;
   if (veri.tur === "image") {
@@ -50,40 +43,32 @@ function apodGoster(veri) {
       </a>`;
   } else {
     // Video vb. günlerde NASA sayfasına yönlendir
-    medya = `<div class="not">🎬 Bugünkü içerik bir video/animasyon.
-      <a href="${kaynak}" target="_blank" rel="noopener">NASA'da izle →</a></div>`;
+    medya = `<div class="not">${ikon("oynat")}<span>Bugünkü içerik bir video veya animasyon.
+      <a href="${kaynak}" target="_blank" rel="noopener">NASA'da izle</a></span></div>`;
   }
 
-  const telif = veri.telif ? ` · © ${metinTemizle(veri.telif)}` : "";
+  const telif = veri.telif ? `<span>· © ${metinTemizle(veri.telif)}</span>` : "";
 
-  // Türkçe çeviri varsa üstte Türkçe, altta İngilizce orijinal.
-  // Çeviri yoksa (servis çalışmadıysa) sadece İngilizce.
+  // Türkçe çeviri varsa üstte Türkçe, altta İngilizce orijinal. Yoksa sadece İngilizce.
   const turkceVar = Boolean(veri.aciklama_tr);
   const baslik = turkceVar ? veri.baslik_tr || veri.baslik : veri.baslik;
 
-  const turkceBolum = turkceVar
-    ? `<p class="apod-aciklama">${metinTemizle(veri.aciklama_tr)}</p>`
-    : "";
-
+  const turkceBolum = turkceVar ? `<p class="apod-aciklama">${metinTemizle(veri.aciklama_tr)}</p>` : "";
   const ingilizceBolum = `
     <div class="${turkceVar ? "orijinal" : ""}">
-      ${turkceVar ? `<h4 class="orijinal-baslik">🇬🇧 English · ${metinTemizle(veri.baslik)}</h4>` : ""}
+      ${turkceVar ? `<h4 class="orijinal-baslik">Orijinal metin<span>${metinTemizle(veri.baslik)}</span></h4>` : ""}
       <p class="apod-aciklama">${metinTemizle(veri.aciklama ?? "")}</p>
     </div>`;
 
   apodKutusu.innerHTML = `
     <div class="medya">${medya}</div>
     <h3 class="apod-baslik">${metinTemizle(baslik)}</h3>
-    <p class="apod-bilgi">📅 ${tarihYaz(veri.tarih)}${telif}</p>
+    <p class="apod-bilgi">${ikon("takvim")}<span>${tarihYaz(veri.tarih)}</span>${telif}</p>
     ${turkceBolum}
     ${ingilizceBolum}
-    <p class="apod-bilgi"><a href="${kaynak}" target="_blank" rel="noopener">NASA'da görüntüle →</a></p>
+    <a class="devam-linki" href="${kaynak}" target="_blank" rel="noopener">NASA'da görüntüle ${ikon("ok")}</a>
   `;
 }
-
-// ---------------------------------------------------------------------
-// Yardımcı fonksiyonlar
-// ---------------------------------------------------------------------
 
 // "2024-04-08" -> "8 Nisan 2024"
 function tarihYaz(isoTarih) {
@@ -92,32 +77,20 @@ function tarihYaz(isoTarih) {
   });
 }
 
-// Güvenlik: dışarıdan gelen metindeki < > gibi karakterleri zararsız hale getir.
-// (Yoksa biri metnin içine kod gizleyip sayfamızda çalıştırabilir: "XSS saldırısı")
-function metinTemizle(metin) {
-  const div = document.createElement("div");
-  div.textContent = metin ?? "";
-  return div.innerHTML.replaceAll('"', "&quot;");
-}
+tarihKutusu.addEventListener("change", () => apodGetir(tarihKutusu.value));
 
 // ---------------------------------------------------------------------
-// 3) Olaylar: kullanıcı bir şey yapınca ne olsun?
-// ---------------------------------------------------------------------
-tarihKutusu.addEventListener("change", () => {
-  apodGetir(tarihKutusu.value);
-});
-
-// ---------------------------------------------------------------------
-// 4) Günün bilgisi
+// 2) Günün bilgisi
 // ---------------------------------------------------------------------
 async function bilgiGetir() {
   const kutu = document.getElementById("bilgi");
+  kutu.innerHTML = yukleniyorHtml("Günün bilgisi hazırlanıyor");
   try {
     const cevap = await fetch("/api/fact");
     const bilgi = await cevap.json();
     kutu.innerHTML = `
       <div class="bilgi-ust">
-        <h2>💡 Günün Bilgisi</h2>
+        <h2 class="bolum-basligi">${ikon("bilgi")}Günün Bilgisi</h2>
         <span class="etiket">${metinTemizle(bilgi.kategori)}</span>
       </div>
       <p class="bilgi-metni">${metinTemizle(bilgi.metin)}</p>`;
@@ -127,10 +100,11 @@ async function bilgiGetir() {
 }
 
 // ---------------------------------------------------------------------
-// 5) Güncel haberler
+// 3) Güncel haberler
 // ---------------------------------------------------------------------
 async function haberleriGetir() {
   const liste = document.getElementById("haber-listesi");
+  liste.innerHTML = yukleniyorHtml("Haberler yükleniyor");
   try {
     const cevap = await fetch("/api/news?adet=6");
     const haberler = await cevap.json();
@@ -144,11 +118,11 @@ async function haberleriGetir() {
           <p class="haber-meta">${metinTemizle(h.kaynak)} · ${neZamanOnce(h.tarih)}</p>
           <h3>${metinTemizle(h.baslik_tr || h.baslik)}</h3>
           <p class="haber-ozet">${metinTemizle(h.ozet_tr || h.ozet)}</p>
-          ${h.baslik_tr ? `<p class="haber-orijinal">🇬🇧 ${metinTemizle(h.baslik)}</p>` : ""}
+          ${h.baslik_tr ? `<p class="haber-orijinal">${metinTemizle(h.baslik)}</p>` : ""}
         </div>
       </a>`).join("");
   } catch (hata) {
-    liste.innerHTML = `<p class="hata">😕 Haberler alınamadı.<br><small>${metinTemizle(hata.message)}</small></p>`;
+    liste.innerHTML = hataHtml("Haberler alınamadı.", hata.message);
   }
 }
 

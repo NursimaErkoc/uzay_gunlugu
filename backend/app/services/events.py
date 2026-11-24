@@ -90,10 +90,10 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
     evre = A.SearchMoonQuarter(t_bas)
     while evre.time.ut < t_son.ut:
         if evre.quarter == 2:
-            olaylar.append(_olay("gokyuzu", "🌕", "Dolunay", evre.time,
+            olaylar.append(_olay("gokyuzu", "dolunay", "Dolunay", evre.time,
                                  "Ay, Dünya'nın Güneş'e göre tam karşısında ve bütün gece gökyüzünde."))
         elif evre.quarter == 0:
-            olaylar.append(_olay("gokyuzu", "🌑", "Yeni Ay", evre.time,
+            olaylar.append(_olay("gokyuzu", "yeni-ay", "Yeni Ay", evre.time,
                                  "Ay görünmez. Yıldız, gezegen ve galaksi gözlemi için ayın en karanlık geceleri."))
         evre = A.NextMoonQuarter(evre)
 
@@ -106,7 +106,7 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
         (mevsim.dec_solstice, "Kış Gündönümü", "Kuzey Yarımküre'de yılın en uzun gecesi. Bundan sonra günler uzamaya başlar."),
     ]:
         if bu_ayda(zaman):
-            olaylar.append(_olay("gokyuzu", "🌍", baslik, zaman, aciklama))
+            olaylar.append(_olay("gokyuzu", "mevsim", baslik, zaman, aciklama))
 
     # --- Ay tutulmaları ---
     tutulma = A.SearchLunarEclipse(t_bas)
@@ -121,7 +121,7 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
                     else "Türkiye'den görülemeyecek (tutulma anında Ay ufkun altında).")
         if tutulma.kind == A.EclipseKind.Penumbral:
             aciklama += " Yarıgölge tutulmasında Ay sadece hafifçe kararır, çıplak gözle fark etmek zordur."
-        olaylar.append(_olay("gokyuzu", "🌘", f"{tur} Ay Tutulması", tutulma.peak, aciklama,
+        olaylar.append(_olay("gokyuzu", "ay-tutulmasi", f"{tur} Ay Tutulması", tutulma.peak, aciklama,
                              turkiyeden_gorunur=gorunur))
         tutulma = A.NextLunarEclipse(tutulma.peak)
 
@@ -135,10 +135,10 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
         gorunur = abs(yerel.peak.time.ut - tutulma.peak.ut) < 0.5
         if gorunur:
             aciklama = (f"Ankara'dan parçalı olarak görülecek: Güneş yaklaşık {_yuzde(yerel.obscuration)} oranında kapanacak. "
-                        "⚠️ Güneş'e asla korumasız gözle veya normal güneş gözlüğüyle bakma!")
+                        "Güneş'e asla korumasız gözle veya normal güneş gözlüğüyle bakma!")
         else:
             aciklama = "Türkiye'den görülemeyecek. Canlı yayınlardan izlenebilir."
-        olaylar.append(_olay("gokyuzu", "🌞", f"{tur} Güneş Tutulması", tutulma.peak, aciklama,
+        olaylar.append(_olay("gokyuzu", "gunes-tutulmasi", f"{tur} Güneş Tutulması", tutulma.peak, aciklama,
                              turkiyeden_gorunur=gorunur))
         tutulma = A.NextGlobalSolarEclipse(tutulma.peak)
 
@@ -148,7 +148,7 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
         if bu_ayda(zaman):
             ad = GEZEGEN_ADLARI[gezegen]
             ek = " Uranüs ve Neptün için dürbün veya teleskop gerekir." if gezegen in (A.Body.Uranus, A.Body.Neptune) else ""
-            olaylar.append(_olay("gokyuzu", "🪐", f"{ad} Karşı Konumda", zaman,
+            olaylar.append(_olay("gokyuzu", "gezegen", f"{ad} Karşı Konumda", zaman,
                                  f"{ad} Dünya'ya en yakın ve en parlak döneminde. Gün batımında doğar, "
                                  f"bütün gece görülebilir. Gözlem için yılın en iyi zamanı!{ek}"))
 
@@ -159,7 +159,7 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
             ad = GEZEGEN_ADLARI[gezegen]
             ne_zaman = ("sabahları gün doğumundan önce doğu ufkunda" if uzanim.visibility == A.Visibility.Morning
                         else "akşamları gün batımından sonra batı ufkunda")
-            olaylar.append(_olay("gokyuzu", "✨", f"{ad} En Büyük Uzanımda", uzanim.time,
+            olaylar.append(_olay("gokyuzu", "uzanim", f"{ad} En Büyük Uzanımda", uzanim.time,
                                  f"{ad}, Güneş'ten en uzak göründüğü noktada ({round(uzanim.elongation)}°). "
                                  f"Onu {ne_zaman} görmek için en iyi zaman."))
             uzanim = A.SearchMaxElongation(gezegen, uzanim.time.AddDays(1))
@@ -171,13 +171,13 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
         tepe = A.Time.Make(yil, ay, yagmur["tepe_gun"], 0, 0, 0)
         ay_isigi = A.Illumination(A.Body.Moon, tepe).phase_fraction   # 0 = karanlık, 1 = dolunay
         if ay_isigi < 0.35:
-            ay_notu = f"Ay ışığı az ({_yuzde(ay_isigi)}), bu yıl gözlem koşulları iyi! 🎉"
+            ay_notu = f"Ay ışığı az ({_yuzde(ay_isigi)}), bu yıl gözlem koşulları iyi."
         elif ay_isigi > 0.65:
             ay_notu = f"Ay oldukça aydınlık ({_yuzde(ay_isigi)}), sönük meteorlar görünmeyebilir."
         else:
             ay_notu = f"Ay {_yuzde(ay_isigi)} aydınlık."
         olaylar.append(_olay(
-            "gokyuzu", "🌠", f"{yagmur['ad']} Meteor Yağmuru", tepe,
+            "gokyuzu", "meteor", f"{yagmur['ad']} Meteor Yağmuru", tepe,
             f"Tepe gecesi: ideal koşullarda saatte ~{yagmur['saatlik']} meteor. Kaynağı: {yagmur['kaynak']}. "
             f"{ay_notu} En iyi gözlem gece yarısından sonra, şehir ışıklarından uzakta.",
             kesinlik="gun",
@@ -189,10 +189,17 @@ def gokyuzu_olaylari(yil: int, ay: int) -> list[dict]:
 # =====================================================================
 # 2) Fırlatmalar ve uzay etkinlikleri (Launch Library 2)
 # =====================================================================
+# LL2 durum kodu -> (ekranda yazılacak metin, renk için kod)
+# Renk ve görünüm kararı sayfaya (CSS) ait; backend sadece "ne durumda" bilgisini verir.
 DURUMLAR = {
-    "Go": "✅ Hazır", "TBD": "❔ Tarih belirsiz", "TBC": "❔ Teyit bekleniyor", "Hold": "⏸️ Beklemede",
-    "Success": "✅ Başarılı", "Failure": "❌ Başarısız", "Partial Failure": "⚠️ Kısmen başarısız",
-    "In Flight": "🚀 Uçuşta",
+    "Go": ("Hazır", "hazir"),
+    "TBD": ("Tarih belirsiz", "belirsiz"),
+    "TBC": ("Teyit bekleniyor", "belirsiz"),
+    "Hold": ("Beklemede", "beklemede"),
+    "Success": ("Başarılı", "basarili"),
+    "Failure": ("Başarısız", "basarisiz"),
+    "Partial Failure": ("Kısmen başarısız", "kismen"),
+    "In Flight": ("Uçuşta", "ucusta"),
 }
 ETKINLIK_TURLERI = {
     "EVA": "Uzay Yürüyüşü", "Static Fire": "Motor Testi", "Press Event": "Basın Toplantısı",
@@ -241,10 +248,12 @@ async def firlatmalar(yil: int, ay: int) -> list[dict]:
         roket = f["rocket"]["configuration"]["full_name"]
         firma = (f.get("launch_service_provider") or {}).get("name", "")
         yer = f["pad"]["location"]["name"]
+        durum_metni, durum_kodu = DURUMLAR.get(f["status"]["abbrev"], (f["status"]["name"], "belirsiz"))
         olay = _olay(
-            "firlatma", "🚀", gorev.get("name") or f["name"], f["net"], gorev.get("description"),
+            "firlatma", "roket", gorev.get("name") or f["name"], f["net"], gorev.get("description"),
             kesinlik=_kesinlik((f.get("net_precision") or {}).get("abbrev")),
-            durum=DURUMLAR.get(f["status"]["abbrev"], f["status"]["name"]),
+            durum=durum_metni,
+            durum_kodu=durum_kodu,
             starlink="Starlink" in f["name"],
         )
         olay["id"] = f"firlatma:{f['id']}"
@@ -265,7 +274,7 @@ async def uzay_etkinlikleri(yil: int, ay: int) -> list[dict]:
     for e in ham:
         tur = e["type"]["name"]
         olay = _olay(
-            "etkinlik", "🛰️", e["name"], e["date"], e.get("description"),
+            "etkinlik", "uydu", e["name"], e["date"], e.get("description"),
             kesinlik=_kesinlik((e.get("date_precision") or {}).get("abbrev")) if e.get("date_precision") else "dakika",
         )
         olay["id"] = f"etkinlik:{e['id']}"

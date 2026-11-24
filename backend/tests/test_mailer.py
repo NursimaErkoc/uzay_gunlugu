@@ -38,13 +38,13 @@ def test_hicbir_ayar_yoksa_gonderilmez(monkeypatch):
 
 def test_resend_istegi_dogru_hazirlanir(monkeypatch, resend_ayarli):
     giden = _sahte_post(monkeypatch, 200)
-    mailer.gonder("🚀 Konu", "düz metin", "<p>html</p>")
+    mailer.gonder("Konu", "düz metin", "<p>html</p>")
 
     istek = giden[0]
     assert istek["url"] == "https://api.resend.com/emails"
     assert istek["headers"]["Authorization"] == "Bearer re_test_anahtari"
     assert istek["json"]["to"] == ["ben@ornek.com"]
-    assert istek["json"]["subject"] == "🚀 Konu"
+    assert istek["json"]["subject"] == "Konu"
     assert istek["json"]["html"] == "<p>html</p>"
 
 

@@ -93,6 +93,16 @@ def test_firlatmalar_ceviriliyor_ve_siralaniyor(monkeypatch):
     assert firlatma["starlink"] is True
     assert firlatma["aciklama"] == "TR: Internet satellites."   # sahte çeviri
     assert firlatma["aciklama_en"] == "Internet satellites."
-    assert firlatma["durum"] == "✅ Hazır"
+    assert firlatma["durum"] == "Hazır"
+    assert firlatma["durum_kodu"] == "hazir"
+    assert firlatma["ikon"] == "roket"
     tarihler = [o["tarih"] for o in sonuc["olaylar"]]
     assert tarihler == sorted(tarihler), "Olaylar tarihe göre sıralı olmalı"
+
+
+def test_gokyuzu_olaylarinda_emoji_yok_ikon_adi_var():
+    gecerli = {"dolunay", "yeni-ay", "mevsim", "ay-tutulmasi", "gunes-tutulmasi", "gezegen", "uzanim", "meteor"}
+    for ay in (3, 8, 12):
+        for olay in events.gokyuzu_olaylari(2026, ay):
+            assert olay["ikon"] in gecerli, olay["ikon"]
+            assert olay["aciklama"].isprintable()

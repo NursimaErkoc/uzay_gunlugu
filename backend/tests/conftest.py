@@ -69,7 +69,7 @@ def ornek_olay(**degisenler) -> dict:
     olay = {
         "id": "firlatma:test-1",
         "tur": "firlatma",
-        "ikon": "🚀",
+        "ikon": "roket",
         "baslik": "Test Görevi",
         "tarih": "2026-12-10T15:30:00Z",
         "kesinlik": "dakika",
