@@ -98,7 +98,7 @@ frontend/            index.html · gokyuzu.html · iss.html · dunya.html · ast
 | Sonra | **PWA**: `manifest.json`, `sw.js` (strateji: önce internet, olmazsa kayıtlı kopya; `/api/iss` ve `/api/reminders` kaydedilmez; kayıt biçimi değişirse sw.js'deki `SURUM` artırılmalı), `cevrimdisi.html`, ikonlar SVG'den Edge ile PNG'ye çevrildi (Pillow yok). **Logo:** ince çizgili hilal + noktalı yörünge + küçük uydu (kullanıcı birçok seçenek arasından seçti, "sonra değiştiririz" dedi; çizgi film tarzı ve renkli dolgulu tasarımları beğenmedi, sade ince çizgi tarzını seviyor; uydu, takımyıldız, hilal ve Satürn öğelerini beğendi). Logo değişirse: `ikonlar/ikon.svg` düzenlenir, sonra 512/192/180 PNG'ler Edge headless `--screenshot` ile yeniden üretilir. `ortak.js`: SW kaydı, "Uygulamayı yükle" düğmesi (beforeinstallprompt), iPhone için "Paylaş → Ana Ekrana Ekle" notu, çevrimdışı şeridi |
 | Sonra | **Dünya'nın Fotoğrafı** (`dunya.html`, `GET /api/dunya?tarih=`, `services/epic.py`): NASA EPIC, anahtarsız. Günün 10-20 fotoğrafı **akıcı** oynatılıyor: `<canvas>` üzerinde requestAnimationFrame ile çapraz geçiş (kullanıcı ilk sürümdeki sıçramalı geçişin gözü yorduğunu söyledi); fotoğraflar bir kez ekran boyutuna küçültülüp hazır tutuluyor, hız düğmesi (1x/2x/0,5x), zaman çubuğu, önizleme şeridi, görünen bölge adı (merkez boylamına göre), Türkiye görünürlüğü (merkeze <70°), tarih seçici. Son gün 3 saat, geçmiş günler 7 gün önbellekte |
 
-Son merge: **PR #13** (`pwa`). Üzerinde çalışılan dal: `dunya` (merge edilince burayı güncelle).
+Son merge: **PR #14** (`dunya`). Üzerinde çalışılan dal: `menu` (gruplu menü; merge edilince burayı güncelle).
 
 ## 6. ⏳ Açık konular (sırayla)
 
@@ -124,7 +124,7 @@ Son merge: **PR #13** (`pwa`). Üzerinde çalışılan dal: `dunya` (merge edili
   git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor asteroitler pwa
   git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor asteroitler pwa
   ```
-- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=8` → `?v=9` yapılmalı.
+- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=9` → `?v=10` yapılmalı.
 - Kullanıcı ileride site adresini değiştirmek isteyebilir: Render'da yeni servis açmak ya da alan adı bağlamak gerekir.
 
 ## 7. 🚀 Sırada: Yeni bölümler
@@ -143,6 +143,6 @@ Kullanıcı bu sırayla yapılmasını istedi (25 Kasım 2026):
 
 Önerilip seçilmeyenler: Uzay Havası (NOAA Kp), Favorilerim, Uzay Bilgi Yarışması.
 
-⚠️ **Sıradaki küçük iş: GRUPLU MENÜ** (kullanıcı "gruplu daha iyi" dedi): Günlük ve Takvim ayrı, diğerleri "Keşfet ▾" açılır menüsünde. Menüde şu an 6 bağlantı var (Günlük · Bu Gece · ISS · Dünya · Asteroitler · Uzay Takvimi) + "Uygulamayı yükle" düğmesi. Telefonda 3-4 satıra taşıyor. Yeni sayfalar eklendikçe menü kalabalıklaşacak; birkaç bölüm sonra menüyü gruplamak (ör. "Keşfet" açılır menüsü) gerekebilir.
+✅ **GRUPLU MENÜ** (dal: `menu`): Günlük · **Keşfet ▾** (Bu Gece, ISS, Dünya, Asteroitler) · Uzay Takvimi. `<details class="menu-grup">` ile yapıldı (JS'siz de açılır); ortak.js `menuGruplariniKur()` dışarı tıklayınca/Esc ile kapatır. Yeni sayfalar (Ağırlık, Gök Haritası) **6 sayfanın hepsinde** `.menu-acilir` içine eklenmeli; grupta bir sayfa aktifse `<summary class="aktif">` olmalı.
 
 Tasarım dili: koyu uzay teması, Michroma başlıklar / Exo 2 metin, **emoji yok**. İkonlar `frontend/ortak.js`'teki `IKONLAR` setinden (gerekirse yeni SVG eklenir). Renkler `style.css` başındaki CSS değişkenlerinde.
