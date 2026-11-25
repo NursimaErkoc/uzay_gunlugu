@@ -6,13 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- telefonda düzgün görünsün -->
   <title>Uzay Günlüğü</title>
   <meta name="theme-color" content="#010208">
+  <!-- Uygulama (PWA): kimlik kartı ve ikonlar -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="ikonlar/ikon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="ikonlar/ikon-180.png">
   <!-- Fontlar: Google Fonts'tan. preconnect = bağlantıyı önceden aç, daha hızlı yüklensin -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
-  <!-- ?v=6: "sürüm etiketi". CSS/JS'te büyük bir değişiklik yapınca bu sayıyı artır;
+  <!-- ?v=7: "sürüm etiketi". CSS/JS'te büyük bir değişiklik yapınca bu sayıyı artır;
        tarayıcı yeni adresi önbellekte bulamaz ve dosyanın yenisini indirir. -->
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <header class="ust">
@@ -59,7 +63,7 @@
     <a href="https://spaceflightnewsapi.net" target="_blank" rel="noopener">Spaceflight News API</a>
   </footer>
 
-  <script src="ortak.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="ortak.js?v=7"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

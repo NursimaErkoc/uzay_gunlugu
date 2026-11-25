@@ -1,0 +1,17 @@
+{
+  "name": "Uzay Günlüğü",
+  "short_name": "Uzay Günlüğü",
+  "description": "Günün uzay fotoğrafı, bu gecenin gökyüzü, ISS, asteroitler ve uzay takvimi",
+  "lang": "tr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#010208",
+  "theme_color": "#010208",
+  "icons": [
+    { "src": "ikonlar/ikon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ikonlar/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "ikonlar/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "ikonlar/ikon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
