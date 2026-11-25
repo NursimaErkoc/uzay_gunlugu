@@ -48,7 +48,8 @@ const IKONLAR = {
 /** ikon("roket") -> <svg ...>...</svg>   Bilinmeyen ad gelirse zil ikonu. */
 function ikon(ad, sinif = "") {
   const icerik = IKONLAR[ad] || IKONLAR.zil;
-  return `<svg class="ikon ${sinif}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  // width/height="18": CSS yüklenemese bile ikon dev boyuta çıkmasın (yedek boyut). Asıl boyutu CSS belirler.
+  return `<svg class="ikon ${sinif}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icerik}</svg>`;
 }
 
@@ -72,6 +73,11 @@ function yildizlariBaslat() {
   const tuval = document.createElement("canvas");
   tuval.className = "yildiz-tuvali";
   tuval.setAttribute("aria-hidden", "true");
+  // Konumu burada (satır içi stil olarak) veriyoruz, CSS'e bırakmıyoruz: style.css herhangi bir
+  // sebeple yüklenmese bile tuval sayfada yer kaplayıp içeriği aşağı itmesin, hep arkada dursun.
+  Object.assign(tuval.style, {
+    position: "fixed", inset: "0", width: "100%", height: "100%", zIndex: "-1", pointerEvents: "none",
+  });
   document.body.prepend(tuval);
   const c = tuval.getContext("2d");
 

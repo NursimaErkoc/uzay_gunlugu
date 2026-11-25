@@ -89,3 +89,37 @@ def test_saglik_sayfasi_ceviri_durumunu_gosterir(istemci):
 def test_sayfa_dosyalari_onbellekte_bayat_kalmaz(istemci):
     assert istemci.get("/style.css").headers["cache-control"] == "no-cache"
     assert "cache-control" not in istemci.get("/api/fact").headers
+
+
+class _SahteIstemci:
+    """httpx.AsyncClient yerine geçer; gönderilen parametreleri kaydeder, hazır cevap döner."""
+    giden = []
+
+    def __init__(self, *a, **k): pass
+    async def __aenter__(self): return self
+    async def __aexit__(self, *a): return False
+
+    async def get(self, url, params):
+        _SahteIstemci.giden.append(params)
+        import httpx
+        return httpx.Response(200, json={"responseStatus": 200, "responseData": {"translatedText": "Merhaba &amp; selam"}})
+
+
+def _mymemory_dene(monkeypatch, eposta):
+    _SahteIstemci.giden = []
+    monkeypatch.setattr(ceviri.httpx, "AsyncClient", _SahteIstemci)
+    monkeypatch.setattr(ceviri, "MYMEMORY_EPOSTA", eposta)
+    sonuc = asyncio.run(ceviri._mymemory_ile("Hello and hi"))
+    return sonuc, _SahteIstemci.giden
+
+
+def test_mymemory_eposta_tanimliysa_istege_eklenir(monkeypatch):
+    sonuc, giden = _mymemory_dene(monkeypatch, "kota@ornek.com")
+    assert giden[0]["de"] == "kota@ornek.com"
+    assert giden[0]["langpair"] == "en|tr"
+    assert sonuc == "Merhaba & selam", "HTML kodları (&amp;) çözülmeli"
+
+
+def test_mymemory_eposta_yoksa_gonderilmez(monkeypatch):
+    _, giden = _mymemory_dene(monkeypatch, "")
+    assert "de" not in giden[0]
