@@ -46,6 +46,7 @@ const IKONLAR = {
   gunes: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   iss: '<path d="M2 8.5h5v7H2zM17 8.5h5v7h-5zM7 12h10M4.5 8.5v7M19.5 8.5v7"/><rect x="10" y="9.5" width="4" height="5" rx="1"/>',
   astronot: '<circle cx="12" cy="8" r="5"/><path d="M9.5 7.5a3 3 0 0 1 5 0"/><path d="M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/>',
+  goz: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   konum: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
 };
 
@@ -207,6 +208,123 @@ function yukleniyorHtml(metin, altMetin = "") {
 function hataHtml(metin, ayrinti = "") {
   return `<div class="hata">${ikon("uyari")}<span>${metin}</span>
     ${ayrinti ? `<small>${metinTemizle(ayrinti)}</small>` : ""}</div>`;
+}
+
+// ---------------------------------------------------------------------
+// 4) KONUM SEÇİCİ (Bu Gece ve ISS sayfaları birlikte kullanır)
+// Şehir listesi + "Konumumu kullan" düğmesi. Seçim tarayıcıda (localStorage) saklanır;
+// böylece bir sayfada seçilen şehir öbür sayfada da seçili gelir.
+// ---------------------------------------------------------------------
+const SEHIRLER = [
+  { ad: "Adana", enlem: 37.0, boylam: 35.32 },
+  { ad: "Ankara", enlem: 39.93, boylam: 32.86 },
+  { ad: "Antalya", enlem: 36.89, boylam: 30.71 },
+  { ad: "Bursa", enlem: 40.19, boylam: 29.06 },
+  { ad: "Diyarbakır", enlem: 37.91, boylam: 40.23 },
+  { ad: "Erzurum", enlem: 39.9, boylam: 41.27 },
+  { ad: "Eskişehir", enlem: 39.78, boylam: 30.52 },
+  { ad: "Gaziantep", enlem: 37.07, boylam: 37.38 },
+  { ad: "İstanbul", enlem: 41.01, boylam: 28.98 },
+  { ad: "İzmir", enlem: 38.42, boylam: 27.14 },
+  { ad: "Kayseri", enlem: 38.73, boylam: 35.48 },
+  { ad: "Konya", enlem: 37.87, boylam: 32.48 },
+  { ad: "Samsun", enlem: 41.29, boylam: 36.33 },
+  { ad: "Trabzon", enlem: 41.0, boylam: 39.72 },
+  { ad: "Van", enlem: 38.49, boylam: 43.38 },
+];
+const KONUM_KAYIT_ANAHTARI = "uzay-gunlugu-konum";
+
+// localStorage bazı durumlarda (gizli sekme vb.) çalışmayabilir; o yüzden try/catch içinde
+function kayitliKonum() {
+  try {
+    const konum = JSON.parse(localStorage.getItem(KONUM_KAYIT_ANAHTARI));
+    // Bozuk ya da eski biçimli bir kayıt varsa kullanma
+    return konum && typeof konum.enlem === "number" && typeof konum.boylam === "number" ? konum : null;
+  } catch {
+    return null;
+  }
+}
+
+function konumuKaydet(konum) {
+  try {
+    localStorage.setItem(KONUM_KAYIT_ANAHTARI, JSON.stringify(konum));
+  } catch { /* kaydedemezsek sorun değil */ }
+}
+
+/**
+ * Sayfadaki şehir kutusunu ve "Konumumu kullan" düğmesini çalıştırır.
+ * Konum her değiştiğinde (ve sayfa ilk açıldığında) degisince(konum) çağrılır.
+ */
+function konumSeciciKur({ secimKutusu, konumButonu, mesajKutusu, degisince }) {
+  const varsayilanMesaj = mesajKutusu.textContent;
+
+  function listeyiDoldur(secili) {
+    const secenekler = SEHIRLER.map((s) =>
+      `<option value="${s.ad}" ${s.ad === secili ? "selected" : ""}>${s.ad}</option>`);
+    if (secili === "Konumum") secenekler.unshift(`<option value="Konumum" selected>Konumum</option>`);
+    secimKutusu.innerHTML = secenekler.join("");
+  }
+
+  secimKutusu.addEventListener("change", () => {
+    const sehir = SEHIRLER.find((s) => s.ad === secimKutusu.value);
+    if (!sehir) return;
+    listeyiDoldur(sehir.ad);   // "Konumum" seçeneği listeden kalksın
+    konumuKaydet(sehir);
+    mesajKutusu.textContent = varsayilanMesaj;
+    degisince(sehir);
+  });
+
+  konumButonu.addEventListener("click", () => {
+    if (!navigator.geolocation) {
+      mesajKutusu.textContent = "Tarayıcın konum özelliğini desteklemiyor.";
+      return;
+    }
+    mesajKutusu.textContent = "Konum alınıyor…";
+    navigator.geolocation.getCurrentPosition(
+      (yer) => {
+        const konum = {
+          ad: "Konumum",
+          // 2 ondalık (~1 km) yeterli; sunucu zaten 1 ondalığa yuvarlıyor
+          enlem: Number(yer.coords.latitude.toFixed(2)),
+          boylam: Number(yer.coords.longitude.toFixed(2)),
+        };
+        listeyiDoldur("Konumum");
+        konumuKaydet(konum);
+        mesajKutusu.textContent = `Konumun kullanılıyor (yaklaşık). ${varsayilanMesaj}`;
+        degisince(konum);
+      },
+      () => { mesajKutusu.textContent = "Konum alınamadı. İzin vermediysen listeden şehir seçebilirsin."; },
+      { timeout: 10000, maximumAge: 10 * 60 * 1000 },
+    );
+  });
+
+  // Başlangıç: kayıtlı konum varsa o, yoksa Ankara
+  const baslangic = kayitliKonum() || SEHIRLER.find((s) => s.ad === "Ankara");
+  listeyiDoldur(baslangic.ad);
+  degisince(baslangic);
+}
+
+// ---------------------------------------------------------------------
+// 5) ZAMAN YAZDIRMA
+// Sunucu zamanları UTC gönderiyor ("...Z"). new Date() bunu cihazın saat dilimine çevirir.
+// ---------------------------------------------------------------------
+function saat(iso) {
+  return new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+}
+
+// Bugün değilse saatin yanına "yarın" ya da tarih ekle
+function saatGun(iso) {
+  if (!iso) return "—";
+  const tarih = new Date(iso);
+  const bugun = new Date();
+  const yarin = new Date(); yarin.setDate(bugun.getDate() + 1);
+  const dun = new Date(); dun.setDate(bugun.getDate() - 1);
+  const ayniGun = (a, b) => a.toDateString() === b.toDateString();
+  let gun = "";
+  if (ayniGun(tarih, yarin)) gun = " (yarın)";
+  else if (ayniGun(tarih, dun)) gun = " (dün)";
+  else if (!ayniGun(tarih, bugun)) gun = ` (${tarih.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })})`;
+  return saat(iso) + gun;
 }
 
 sabitIkonlariYerlestir();

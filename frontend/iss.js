@@ -207,5 +207,125 @@ function astronotKarti(k) {
     </div>`;
 }
 
+// ---------------------------------------------------------------------
+// 4) ISS'i Gör: seçilen konumdan görünür geçişler
+// ---------------------------------------------------------------------
+const gecisKutusu = document.getElementById("gecisler");
+const sonrakiEtiketi = document.getElementById("sonraki-gecis");
+let gecisler = [];
+
+async function gecisleriGetir(konum) {
+  gecisKutusu.innerHTML = yukleniyorHtml("Geçişler hesaplanıyor", "10 günlük yörünge hesaplanıyor, birkaç saniye sürebilir");
+  sonrakiEtiketi.textContent = "";
+  try {
+    const cevap = await fetch(`/api/iss/gecisler?enlem=${konum.enlem}&boylam=${konum.boylam}`);
+    const veri = await cevap.json();
+    if (!cevap.ok) throw new Error(veri.detail || "Bilinmeyen hata");
+    gecisler = veri.gecisler;
+    gecisleriGoster();
+  } catch (hata) {
+    gecisKutusu.innerHTML = hataHtml("Geçişler hesaplanamadı.", hata.message);
+  }
+}
+
+/**
+ * Gökyüzü diyagramı: başının üstünde tutulan bir gökyüzü haritası gibi.
+ * Ortası tepe noktası (90°), dış çember ufuk (0°). Kuzey yukarıda.
+ * Başının üstünde tuttuğun için Doğu solda, Batı sağda (haritalarınkinin tersi).
+ */
+function gokyuzuDiyagrami(yol) {
+  const m = 50, R = 44;
+  const xy = ([azimut, yukseklik]) => {
+    const r = ((90 - yukseklik) / 90) * R;
+    const a = (azimut * Math.PI) / 180;
+    return [m - r * Math.sin(a), m - r * Math.cos(a)];
+  };
+  const noktalar = yol.map(xy);
+  const cizgi = noktalar.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const [bx, by] = noktalar[0];
+  const [sx, sy] = noktalar[noktalar.length - 1];
+  return `
+    <svg class="gokyuzu-diyagrami" viewBox="0 0 100 100" role="img" aria-label="ISS'in gökyüzünde izleyeceği yol">
+      <circle cx="${m}" cy="${m}" r="${R}" class="ufuk"/>
+      <circle cx="${m}" cy="${m}" r="${(R * 2) / 3}" class="halka"/>
+      <circle cx="${m}" cy="${m}" r="${R / 3}" class="halka"/>
+      <text x="${m}" y="4.5">K</text><text x="${m}" y="99">G</text>
+      <text x="2.5" y="${m + 1.5}">D</text><text x="97.5" y="${m + 1.5}">B</text>
+      <polyline points="${cizgi}" class="yol"/>
+      <circle cx="${bx}" cy="${by}" r="2.2" class="bas"/>
+      <circle cx="${sx}" cy="${sy}" r="3" class="son"/>
+    </svg>`;
+}
+
+/**
+ * Türkçe bulunma eki: "Kuzey" -> "Kuzey'de", "Batı" -> "Batı'da".
+ * Büyük ünlü uyumu: son ünlü a/ı/o/u ise -da, e/i/ö/ü ise -de.
+ * Sert ünsüzle (ç f h k p s ş t) bitiyorsa d -> t olur: "Paris'te".
+ */
+function bulunma(kelime) {
+  const unluler = kelime.toLocaleLowerCase("tr").match(/[aıoueiöü]/g) || ["e"];
+  const ek = "aıou".includes(unluler[unluler.length - 1]) ? "a" : "e";
+  const sert = "çfhkpsşt".includes(kelime.slice(-1).toLocaleLowerCase("tr"));
+  return `${kelime}'${sert ? "t" : "d"}${ek}`;
+}
+
+function sureYaz(saniye) {
+  const dk = Math.floor(saniye / 60), sn = saniye % 60;
+  return dk ? `${dk} dk${sn ? ` ${sn} sn` : ""}` : `${sn} sn`;
+}
+
+function gecisleriGoster() {
+  // Bitmiş geçişleri gösterme (sonuçlar sunucuda 1 saat saklanıyor)
+  const simdi = Date.now();
+  const gelecek = gecisler.filter((g) => new Date(g.bitis.zaman) > simdi);
+  if (!gelecek.length) {
+    gecisKutusu.innerHTML = `<div class="not">${ikon("bilgi")}<span>Önümüzdeki 10 günde bu konumdan görünür bir geçiş yok.
+      ISS'in akşam veya sabah karanlığında görünebildiği dönemler birkaç haftada bir değişir; birkaç gün sonra tekrar bak.</span></div>`;
+    return;
+  }
+  sonrakiyiGuncelle(gelecek[0]);
+
+  gecisKutusu.innerHTML = gelecek.map((g) => {
+    const tarih = new Date(g.baslangic.zaman);
+    const gun = tarih.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" });
+    const bitisMetni = g.golgeye_girer
+      ? `${metinTemizle(bulunma(g.bitis.yon))}, ${g.bitis.yukseklik}° yükseklikte Dünya'nın gölgesine girip kaybolur`
+      : `${metinTemizle(bulunma(g.bitis.yon))} ufka iner`;
+    return `
+      <div class="gecis">
+        ${gokyuzuDiyagrami(g.yol)}
+        <div class="gecis-govde">
+          <p class="gecis-zaman"><strong>${saat(g.baslangic.zaman)}</strong> <span>${gun}</span>
+            <span class="etiket">${metinTemizle(g.parlaklik)}</span></p>
+          <ol class="gecis-adimlari">
+            <li><span class="adim-saat">${saat(g.baslangic.zaman)}</span>${metinTemizle(bulunma(g.baslangic.yon))}, ufkun ${g.baslangic.yukseklik}° üstünde belirir</li>
+            <li><span class="adim-saat">${saat(g.en_yuksek.zaman)}</span>En yüksek nokta: ${metinTemizle(bulunma(g.en_yuksek.yon))}, ${g.en_yuksek.yukseklik}°</li>
+            <li><span class="adim-saat">${saat(g.bitis.zaman)}</span>${bitisMetni}</li>
+          </ol>
+          <p class="soluk">Görünme süresi: ${sureYaz(g.sure_sn)}</p>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// "2 sa 15 dk sonra" gibi geri sayım; dakikada bir güncellenir
+function sonrakiyiGuncelle(gecis) {
+  const fark = Math.round((new Date(gecis.baslangic.zaman) - Date.now()) / 60000);
+  if (fark <= 0) {
+    sonrakiEtiketi.textContent = "Şu an geçiyor!";
+    return;
+  }
+  const gun = Math.floor(fark / 1440), sa = Math.floor((fark % 1440) / 60), dk = fark % 60;
+  const parcalar = [gun && `${gun} gün`, sa && `${sa} sa`, !gun && `${dk} dk`].filter(Boolean);
+  sonrakiEtiketi.textContent = `Sonraki geçiş: ${parcalar.join(" ")} sonra`;
+}
+setInterval(() => { if (gecisler.length) gecisleriGoster(); }, 60 * 1000);
+
 baslat();
 uzaydakileriGetir();
+konumSeciciKur({
+  secimKutusu: document.getElementById("sehir"),
+  konumButonu: document.getElementById("konumumu-kullan"),
+  mesajKutusu: document.getElementById("konum-mesaji"),
+  degisince: gecisleriGetir,
+});
