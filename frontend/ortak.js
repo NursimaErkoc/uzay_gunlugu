@@ -54,6 +54,7 @@ const IKONLAR = {
   konum: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
   pusula: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
   asagi: '<path d="m6 9 6 6 6-6"/>',
+  takimyildiz: '<circle cx="5" cy="18" r="1.6"/><circle cx="10" cy="8" r="1.6"/><circle cx="17" cy="11" r="1.6"/><circle cx="20" cy="4" r="1.2"/><path d="M5.8 16.6 9.2 9.4M11.5 8.6l4 1.8M17.8 9.6l1.6-4"/>',
   terazi: '<path d="M12 3v18M8 21h8M4 7h16"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/>',
 };
 

@@ -12,7 +12,7 @@ Sonra tarayıcıda:
 import asyncio
 import secrets
 from contextlib import asynccontextmanager
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Literal
 
 import httpx
@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from app import cache, db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import ceviri, epic, events, facts, gokyuzu, iss, nasa, neo, news, reminders
+from app.services import ceviri, epic, events, facts, gok_haritasi, gokyuzu, iss, nasa, neo, news, reminders
 
 
 # ---------------------------------------------------------------------
@@ -151,6 +151,30 @@ def bu_gece_gokyuzu(
     if sonuc is None:
         sonuc = gokyuzu.bu_gece(enlem, boylam)
         cache.kaydet(anahtar, sonuc, 10 * 60)   # 10 dakika
+    return sonuc
+
+
+@app.get("/api/gok-haritasi", tags=["Gökyüzü"])
+def gok_haritasi_cisimleri(
+    enlem: float = Query(default=39.93, ge=-90, le=90),
+    boylam: float = Query(default=32.86, ge=-180, le=180),
+    zaman: datetime | None = Query(default=None, description="ISO biçiminde an, ör. 2026-11-25T20:00:00Z (boşsa şimdi)"),
+):
+    """Gök Haritası için Güneş, Ay ve gezegenlerin konumu (yıldızlar frontend/veri/gok.json'da)."""
+    enlem, boylam = round(enlem, 1), round(boylam, 1)   # gizlilik + önbellek (bkz. /api/gece)
+    zaman = zaman or datetime.now(timezone.utc)
+    if zaman.tzinfo is None:
+        zaman = zaman.replace(tzinfo=timezone.utc)      # saat dilimi yazılmamışsa UTC say
+    if not 1900 <= zaman.year <= 2100:
+        raise HTTPException(status_code=422, detail="Tarih 1900-2100 arasında olmalı.")
+    # 10 dakikaya yuvarla: bu sürede gezegenler haritada fark edilecek kadar kıpırdamaz (Ay ~0,1°),
+    # ve aynı aralıktaki istekler aynı önbelleği kullanır.
+    zaman = zaman.astimezone(timezone.utc).replace(minute=zaman.minute - zaman.minute % 10, second=0, microsecond=0)
+    anahtar = f"gok:{enlem}:{boylam}:{zaman:%Y%m%d%H%M}"
+    sonuc = cache.getir(anahtar)
+    if sonuc is None:
+        sonuc = gok_haritasi.cisimler(enlem, boylam, zaman)
+        cache.kaydet(anahtar, sonuc, 6 * 60 * 60)
     return sonuc
 
 
