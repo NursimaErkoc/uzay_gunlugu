@@ -117,10 +117,14 @@ async def _mymemory_ile(metin: str) -> str | None:
         async with httpx.AsyncClient(timeout=20) as istemci:
             for parca in parcalar:
                 cevap = await istemci.get(MYMEMORY_URL, params={**temel, "q": parca})
-                veri = cevap.json() if cevap.status_code == 200 else {}
+                try:
+                    veri = cevap.json()
+                except ValueError:
+                    veri = {}
                 # MyMemory hata durumunu (ör. günlük kota doldu) cevabın içinde bildiriyor
-                if str(veri.get("responseStatus")) != "200" or veri.get("quotaFinished"):
-                    son_hatalar["mymemory"] = f"durum {veri.get('responseStatus', cevap.status_code)}"
+                if cevap.status_code != 200 or str(veri.get("responseStatus")) != "200" or veri.get("quotaFinished"):
+                    ayrinti = str(veri.get("responseDetails") or cevap.text)[:160]
+                    son_hatalar["mymemory"] = (f"HTTP {cevap.status_code}, durum {veri.get('responseStatus')}: {ayrinti}")
                     return None
                 cevrilenler.append(html.unescape(veri["responseData"]["translatedText"]))
     except Exception as hata:

@@ -71,7 +71,11 @@ async def tarayici_onbellegi(istek, sonraki):
 @app.get("/api/saglik", tags=["Genel"])
 def saglik_kontrolu():
     """Sunucu ayakta mı? Dış servislerin son hataları da burada görünür (sorun ararken işe yarar)."""
-    return {"durum": "çalışıyor", "ceviri_son_hatalar": ceviri.son_hatalar}
+    return {
+        "durum": "çalışıyor",
+        "ceviri_son_hatalar": ceviri.son_hatalar,
+        "mymemory_eposta_tanimli": bool(ceviri.MYMEMORY_EPOSTA),   # adresin kendisini göstermiyoruz
+    }
 
 
 @app.get("/api/apod", tags=["NASA"])
