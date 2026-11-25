@@ -76,6 +76,7 @@ def saglik_kontrolu():
         "durum": "çalışıyor",
         "ceviri_son_hatalar": ceviri.son_hatalar,
         "mymemory_eposta_tanimli": bool(ceviri.MYMEMORY_EPOSTA),   # adresin kendisini göstermiyoruz
+        "iss_tle": iss.durum,   # ISS yörünge verisi hangi kaynaktan geldi, hangi kaynaklar hata verdi
     }
 
 

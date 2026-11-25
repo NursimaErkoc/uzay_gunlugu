@@ -38,7 +38,7 @@ NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberleri
 .venv\Scripts\python -m uvicorn app.main:app --reload --app-dir backend
 #   -> http://127.0.0.1:8000  (site)   http://127.0.0.1:8000/docs  (API)
 
-# Testler (şu an 101 test, hepsi geçiyor)
+# Testler (şu an 106 test, hepsi geçiyor)
 .venv\Scripts\python -m pytest -v
 
 # Paketler
@@ -64,7 +64,7 @@ backend/app/
   cache.py           hafıza + disk önbellek  mailer.py  Resend API (canlı) / Gmail SMTP (yerel)
   services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · iss.py · ceviri.py · reminders.py
 backend/data/        facts.json (64 bilgi) · meteor_showers.json
-backend/tests/       101 test (pytest)
+backend/tests/       106 test (pytest)
 frontend/            index.html · gokyuzu.html · iss.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · events.js
 .github/workflows/   testler.yml · hatirlatmalar.yml (cron)
 ```

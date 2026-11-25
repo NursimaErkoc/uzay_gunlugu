@@ -27,8 +27,20 @@ from sgp4.api import Satrec, jday
 from app import cache
 from app.services import events
 
-TLE_URL = "https://celestrak.org/NORAD/elements/gp.php"
 ISS_NUMARASI = 25544            # ISS'in uydu katalog numarası
+
+# Yörünge verisi kaynakları: sırayla denenir, ilk cevap veren kullanılır.
+# (CelesTrak, Render gibi bulut sunuculardan gelen istekleri bazen yanıtlamıyor.)
+#   (ad, adres, biçim)  biçim: "metin" = iki satır düz metin, "json" = {"line1": ..., "line2": ...}
+TLE_KAYNAKLARI = [
+    ("CelesTrak", f"https://celestrak.org/NORAD/elements/gp.php?CATNR={ISS_NUMARASI}&FORMAT=TLE", "metin"),
+    ("ARISS", "https://live.ariss.org/iss.txt", "metin"),
+    ("wheretheiss.at", f"https://api.wheretheiss.at/v1/satellites/{ISS_NUMARASI}/tles", "json"),
+    ("TLE API", f"https://tle.ivanstanojevic.me/api/tle/{ISS_NUMARASI}", "json"),
+]
+
+# /api/saglik'te gösterilir: hangi kaynak kullanıldı, son hatalar neydi
+durum: dict = {"tle_kaynagi": None, "tle_hatalari": {}}
 DUNYA_YARICAPI = 6378.137       # km (ekvatorda)
 BASIKLIK = 1 / 298.257223563    # Dünya tam küre değil, kutuplardan hafifçe basık (WGS84 modeli)
 AU_KM = 149_597_870.7           # 1 astronomik birim (Dünya-Güneş uzaklığı) km cinsinden
@@ -41,22 +53,52 @@ class IssHatasi(Exception):
 # =====================================================================
 # Yörünge verisi (TLE)
 # =====================================================================
+def tle_ayikla(metin_ya_da_json, bicim: str) -> tuple[str, str]:
+    """Kaynağın cevabından TLE'nin iki satırını çıkarır. Bulamazsa ValueError."""
+    if bicim == "json":
+        satir1, satir2 = metin_ya_da_json.get("line1", ""), metin_ya_da_json.get("line2", "")
+    else:
+        satirlar = [s.strip() for s in metin_ya_da_json.strip().splitlines()]
+        satir1 = next((s for s in satirlar if s.startswith("1 ")), "")
+        satir2 = next((s for s in satirlar if s.startswith("2 ")), "")
+    # Doğru uydu mu? Her iki satırda da katalog numarası (25544) 3. karakterden başlar.
+    if not (satir1.startswith(f"1 {ISS_NUMARASI}") and satir2.startswith(f"2 {ISS_NUMARASI}")):
+        raise ValueError("Cevapta ISS'in yörünge verisi yok")
+    return satir1.strip(), satir2.strip()
+
+
 async def tle_getir() -> tuple[str, str]:
-    """ISS'in güncel TLE'sini (iki satır) getirir. 6 saat diskte saklanır."""
+    """
+    ISS'in güncel TLE'sini (iki satır) getirir.
+      1) 6 saatlik önbellekte varsa onu kullan
+      2) Yoksa kaynakları sırayla dene
+      3) Hiçbiri cevap vermezse son 7 gün içinde alınmış eski TLE'yi kullan
+         (birkaç günlük TLE de konumu oldukça iyi hesaplar; hiç göstermemekten iyidir)
+    """
     kayitli = cache.getir("iss:tle")
     if kayitli is not None:
         return tuple(kayitli)
-    try:
-        async with httpx.AsyncClient(timeout=20, headers=events.ISTEK_BASLIKLARI) as istemci:
-            cevap = await istemci.get(TLE_URL, params={"CATNR": ISS_NUMARASI, "FORMAT": "TLE"})
-        cevap.raise_for_status()
-        satirlar = [s.strip() for s in cevap.text.strip().splitlines()]
-        satir1 = next(s for s in satirlar if s.startswith("1 "))
-        satir2 = next(s for s in satirlar if s.startswith("2 "))
-    except (httpx.HTTPError, StopIteration) as hata:
-        raise IssHatasi(f"ISS yörünge verisi alınamadı: {type(hata).__name__}") from hata
-    cache.kaydet("iss:tle", [satir1, satir2], 6 * 60 * 60, kalici=True)
-    return satir1, satir2
+
+    async with httpx.AsyncClient(timeout=10, headers=events.ISTEK_BASLIKLARI) as istemci:
+        for ad, adres, bicim in TLE_KAYNAKLARI:
+            try:
+                cevap = await istemci.get(adres)
+                cevap.raise_for_status()
+                satirlar = tle_ayikla(cevap.json() if bicim == "json" else cevap.text, bicim)
+            except (httpx.HTTPError, ValueError) as hata:
+                durum["tle_hatalari"][ad] = type(hata).__name__
+                continue
+            durum["tle_hatalari"].pop(ad, None)
+            durum["tle_kaynagi"] = ad
+            cache.kaydet("iss:tle", list(satirlar), 6 * 60 * 60, kalici=True)
+            cache.kaydet("iss:tle:yedek", list(satirlar), 7 * 24 * 60 * 60, kalici=True)
+            return satirlar
+
+    yedek = cache.getir("iss:tle:yedek")
+    if yedek is not None:
+        durum["tle_kaynagi"] = "eski kayıt (hiçbir kaynak cevap vermedi)"
+        return tuple(yedek)
+    raise IssHatasi("ISS yörünge verisi hiçbir kaynaktan alınamadı")
 
 
 # =====================================================================
