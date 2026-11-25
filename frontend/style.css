@@ -98,7 +98,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ===== Menü ===== */
 .menu { display: flex; justify-content: center; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
-.menu a {
+.menu a, .menu summary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -110,8 +110,40 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   letter-spacing: 0.04em;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
-.menu a:hover { color: var(--yazi); border-color: var(--kenar-guclu); text-decoration: none; }
-.menu a.aktif { color: var(--yazi); border-color: var(--kenar-guclu); background: rgba(143, 169, 255, 0.1); }
+.menu a:hover, .menu summary:hover { color: var(--yazi); border-color: var(--kenar-guclu); text-decoration: none; }
+.menu a.aktif, .menu summary.aktif { color: var(--yazi); border-color: var(--kenar-guclu); background: rgba(143, 169, 255, 0.1); }
+
+/* Açılır grup ("Keşfet ▾"): <details> + <summary> */
+.menu-grup { position: relative; }
+.menu summary { cursor: pointer; list-style: none; user-select: none; }
+.menu summary::-webkit-details-marker { display: none; }   /* tarayıcının kendi üçgenini gizle */
+.menu-ok .ikon { width: 14px; height: 14px; margin-left: -2px; transition: transform 0.2s; }
+.menu-grup[open] .menu-ok .ikon { transform: rotate(180deg); }
+.menu-grup[open] summary { color: var(--yazi); border-color: var(--kenar-guclu); }
+.menu-acilir {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(7, 10, 24, 0.96);
+  border: 1px solid var(--kenar-guclu);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: menu-acil 0.16s ease-out;
+}
+.menu-acilir a { border-color: transparent; border-radius: 10px; padding: 10px 14px; }
+.menu-acilir a:hover { background: rgba(143, 169, 255, 0.08); border-color: transparent; }
+.menu-acilir a.aktif { border-color: transparent; background: rgba(143, 169, 255, 0.14); }
+@keyframes menu-acil { from { opacity: 0; transform: translate(-50%, -4px); } }
+@media (prefers-reduced-motion: reduce) { .menu-acilir { animation: none; } }
 
 /* ===== Alt kısım ===== */
 .alt { text-align: center; padding: 32px 16px 48px; color: var(--soluk-yazi); font-size: 0.82rem; letter-spacing: 0.03em; }

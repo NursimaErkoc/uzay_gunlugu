@@ -52,6 +52,8 @@ const IKONLAR = {
   asteroit: '<path d="M8 3.5l6.5-.5 5 4 2 6-3 6-7 2-6.5-3L3 11z"/><circle cx="10" cy="9.5" r="1.6"/><circle cx="15" cy="14.5" r="1.1"/><circle cx="9" cy="15" r=".8"/>',
   goz: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   konum: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+  pusula: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  asagi: '<path d="m6 9 6 6 6-6"/>',
 };
 
 /** ikon("roket") -> <svg ...>...</svg>   Bilinmeyen ad gelirse zil ikonu. */
@@ -383,6 +385,28 @@ function uygulamaOzellikleriniBaslat() {
   guncelle();
 }
 
+// ---------------------------------------------------------------------
+// 7) GRUPLU MENÜ ("Keşfet ▾")
+//   Açılır kutu HTML'deki <details> etiketiyle yapılıyor: tıklayınca açılıp kapanmayı tarayıcı
+//   kendisi hallediyor (JavaScript olmasa da çalışır). Biz sadece iki kolaylık ekliyoruz:
+//   menünün dışına tıklayınca veya Esc'ye basınca kapansın.
+// ---------------------------------------------------------------------
+function menuGruplariniKur() {
+  const gruplar = document.querySelectorAll(".menu-grup");
+  document.addEventListener("click", (olay) => {
+    gruplar.forEach((g) => { if (g.open && !g.contains(olay.target)) g.open = false; });
+  });
+  document.addEventListener("keydown", (olay) => {
+    if (olay.key !== "Escape") return;
+    gruplar.forEach((g) => {
+      if (!g.open) return;
+      g.open = false;
+      g.querySelector("summary").focus();
+    });
+  });
+}
+
 sabitIkonlariYerlestir();
 yildizlariBaslat();
 uygulamaOzellikleriniBaslat();
+menuGruplariniKur();
