@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yaklaşan Asteroitler · Uzay Günlüğü</title>
+  <meta name="theme-color" content="#010208">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=6">
+</head>
+<body>
+  <header class="ust">
+    <h1>Uzay Günlüğü</h1>
+    <p class="alt-baslik">Dünya'ya yakın geçecek asteroitler</p>
+    <nav class="menu">
+      <a href="index.html"><span data-ikon="fotograf"></span>Günlük</a>
+      <a href="gokyuzu.html"><span data-ikon="hilal"></span>Bu Gece</a>
+      <a href="iss.html"><span data-ikon="iss"></span>ISS</a>
+      <a href="asteroitler.html" class="aktif"><span data-ikon="asteroit"></span>Asteroitler</a>
+      <a href="events.html"><span data-ikon="takvim"></span>Uzay Takvimi</a>
+    </nav>
+  </header>
+
+  <main class="icerik">
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="asteroit"></span>Bu Hafta Yakından Geçecekler</h2>
+        <span class="etiket" id="tarih-araligi"></span>
+      </div>
+      <div id="ozet" class="deger-izgara"></div>
+    </section>
+
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="uzanim"></span>Dünya'ya Ne Kadar Yaklaşacaklar?</h2>
+      </div>
+      <div class="cizelge-aciklamasi" aria-hidden="true">
+        <span><i class="nokta normal"></i>Asteroit</span>
+        <span><i class="nokta tehlikeli"></i>Potansiyel tehlikeli sınıfında</span>
+        <span>Nokta büyüklüğü = asteroidin boyutu</span>
+      </div>
+      <div id="uzaklik-cizelgesi" class="uzaklik-cizelgesi"></div>
+      <p class="aciklama-notu">
+        Yatay eksen "Ay uzaklığı" cinsinden: 1 = Dünya ile Ay arası (384.400 km). Eksen logaritmik:
+        her çizgi bir öncekinin 10 katı uzaklık. Noktaların üstüne gelince ayrıntılar görünür.
+      </p>
+    </section>
+
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="liste"></span>Tüm Liste</h2>
+      </div>
+      <div class="not bilgi-notu">
+        <span data-ikon="bilgi"></span>
+        <span><strong>"Potansiyel tehlikeli" çarpacak demek değil.</strong> NASA, yörüngesi Dünya'nın yörüngesine
+          7,5 milyon km'den (Ay uzaklığının ~20 katı) fazla yaklaşabilen ve yaklaşık 140 metreden büyük olan
+          asteroitleri bu sınıfa koyuyor, böylece onları daha yakından takip ediyor. Bu listedeki hiçbir asteroit
+          Dünya'ya çarpmayacak.</span>
+      </div>
+      <div id="asteroit-listesi"></div>
+    </section>
+  </main>
+
+  <!-- Noktaların üstüne gelince çıkan bilgi kutusu -->
+  <div id="ipucu" class="ipucu" role="tooltip" hidden></div>
+
+  <footer class="alt">
+    Veriler: <a href="https://api.nasa.gov" target="_blank" rel="noopener">NASA NeoWs</a> ·
+    <a href="https://cneos.jpl.nasa.gov" target="_blank" rel="noopener">JPL CNEOS</a>
+  </footer>
+
+  <script src="ortak.js?v=6"></script>
+  <script src="asteroitler.js?v=6"></script>
+</body>
+</html>

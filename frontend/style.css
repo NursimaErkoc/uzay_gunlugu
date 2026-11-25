@@ -742,6 +742,77 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .gecis { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
+/* ===== Asteroitler ===== */
+.deger-izgara small { display: block; color: var(--gri); font-size: 0.74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.cizelge-aciklamasi { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 8px; color: var(--soluk-yazi); font-size: 0.78rem; }
+.cizelge-aciklamasi span { display: inline-flex; align-items: center; gap: 6px; }
+.cizelge-aciklamasi .nokta { width: 10px; height: 10px; border-radius: 50%; }
+.cizelge-aciklamasi .nokta.normal { background: var(--vurgu); }
+.cizelge-aciklamasi .nokta.tehlikeli { background: var(--kirmizi); }
+
+.uzaklik-cizelgesi { overflow-x: auto; }
+.uzaklik-cizelgesi svg { display: block; width: 100%; min-width: 560px; height: auto; font-family: var(--metin-font); }
+.uzaklik-cizelgesi .izgara { stroke: var(--kenar); stroke-dasharray: 2 4; }
+.uzaklik-cizelgesi .ay-cizgisi { stroke: #e8e4d4; stroke-opacity: 0.45; stroke-dasharray: 4 3; }
+.uzaklik-cizelgesi .satir-cizgisi { stroke: var(--kenar); }
+.uzaklik-cizelgesi .eksen { fill: var(--gri); font-size: 11px; text-anchor: middle; }
+.uzaklik-cizelgesi .eksen.sola { text-anchor: start; }
+.uzaklik-cizelgesi .ay-yazisi { fill: #e8e4d4; font-weight: 600; }
+.uzaklik-cizelgesi .gun-etiketi { fill: var(--soluk-yazi); font-size: 11px; text-anchor: end; }
+.uzaklik-cizelgesi .dunya { fill: #5aa0ff; }
+.uzaklik-cizelgesi .dogrudan-etiket { fill: var(--yazi); font-size: 11px; text-anchor: middle; font-weight: 600; }
+.asteroit-noktasi { cursor: pointer; outline: none; }
+.asteroit-noktasi .isabet { fill: transparent; }
+/* 2 px'lik koyu halka: üst üste binen noktalar birbirinden ayrılsın */
+.asteroit-noktasi .nokta { fill: var(--vurgu); fill-opacity: 0.85; stroke: #0a0d1c; stroke-width: 2; }
+.asteroit-noktasi.tehlikeli .nokta { fill: var(--kirmizi); }
+.asteroit-noktasi:hover .nokta, .asteroit-noktasi:focus .nokta { fill-opacity: 1; stroke: var(--yazi); }
+
+.ipucu {
+  position: absolute;
+  z-index: 10;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: rgba(8, 11, 26, 0.96);
+  border: 1px solid var(--kenar-guclu);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.9);
+  font-size: 0.82rem;
+  color: var(--soluk-yazi);
+  pointer-events: none;
+}
+.ipucu strong { color: var(--yazi); font-weight: 600; }
+.ipucu[hidden] { display: none; }
+
+.bilgi-notu { color: #d9cfa8; }
+.bilgi-notu strong { color: var(--sari); }
+.tehlike-etiketi { color: var(--kirmizi); border-color: color-mix(in srgb, var(--kirmizi) 45%, transparent); }
+.tehlike-etiketi .ikon { width: 1em; height: 1em; }
+
+.asteroit-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.asteroit {
+  background: var(--kart-ic);
+  border: 1px solid var(--kenar);
+  border-left: 2px solid var(--vurgu);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+.asteroit.tehlikeli { border-left-color: var(--kirmizi); }
+.asteroit.gecti { opacity: 0.5; }
+.asteroit header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.asteroit header strong { font-weight: 600; margin-right: auto; }
+.asteroit header strong a { color: var(--yazi); }
+.asteroit .soluk { margin: 2px 0 8px; font-size: 0.8rem; }
+.asteroit dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 0.86rem; }
+.asteroit dt { color: var(--soluk-yazi); }
+.asteroit dd { margin: 0; font-variant-numeric: tabular-nums; }
+.asteroit dd small { display: block; color: var(--gri); font-size: 0.76rem; }
+
 /* ===== Yükleniyor / hata ===== */
 .yukleniyor, .hata {
   display: flex;

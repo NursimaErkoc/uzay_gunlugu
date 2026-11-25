@@ -46,6 +46,7 @@ const IKONLAR = {
   gunes: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   iss: '<path d="M2 8.5h5v7H2zM17 8.5h5v7h-5zM7 12h10M4.5 8.5v7M19.5 8.5v7"/><rect x="10" y="9.5" width="4" height="5" rx="1"/>',
   astronot: '<circle cx="12" cy="8" r="5"/><path d="M9.5 7.5a3 3 0 0 1 5 0"/><path d="M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/>',
+  asteroit: '<path d="M8 3.5l6.5-.5 5 4 2 6-3 6-7 2-6.5-3L3 11z"/><circle cx="10" cy="9.5" r="1.6"/><circle cx="15" cy="14.5" r="1.1"/><circle cx="9" cy="15" r=".8"/>',
   goz: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   konum: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
 };
