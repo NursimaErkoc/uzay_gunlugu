@@ -813,6 +813,58 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .asteroit dd { margin: 0; font-variant-numeric: tabular-nums; }
 .asteroit dd small { display: block; color: var(--gri); font-size: 0.76rem; }
 
+/* ===== Dünya'nın Fotoğrafı ===== */
+.dunya-oynatici { max-width: 560px; margin: 0 auto; }
+.dunya-cerceve {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  /* Dünya'nın etrafında hafif mavi atmosfer ışıltısı */
+  box-shadow: 0 0 60px -10px rgba(124, 199, 255, 0.35);
+  background: #000;
+  overflow: hidden;
+}
+/* Tuval: fotoğraflar dunya.js'de çiziliyor (büyütme de orada yapılıyor) */
+.dunya-cerceve canvas { width: 100%; height: 100%; display: block; }
+.dunya-durum { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(1, 2, 8, 0.75); }
+.dunya-durum[hidden] { display: none; }
+.dunya-kontrol { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+.dunya-kontrol input[type="range"] { flex: 1; accent-color: var(--vurgu); }
+
+.onizlemeler { display: flex; gap: 8px; overflow-x: auto; padding: 18px 2px 6px; scrollbar-width: thin; }
+.onizleme {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: var(--kart-ic);
+  border: 1px solid var(--kenar);
+  border-radius: 12px;
+  color: var(--soluk-yazi);
+  font: inherit;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.onizleme img { width: 56px; height: 56px; border-radius: 50%; display: block; }
+.onizleme.secili { border-color: var(--vurgu); color: var(--yazi); background: rgba(143, 169, 255, 0.12); }
+.onizleme em {
+  position: absolute;
+  top: 4px; right: 4px;
+  font-style: normal;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--vurgu-koyu);
+  background: var(--yesil);
+  border-radius: 4px;
+  padding: 0 3px;
+}
+.aciklama-metni p { margin: 14px 0 0; color: #c9cfee; font-size: 0.95rem; }
+.aciklama-metni strong { color: var(--yazi); }
+
 /* ===== Uygulama (PWA) ===== */
 .yukle-butonu {
   display: inline-flex;
