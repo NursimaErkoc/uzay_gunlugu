@@ -175,6 +175,25 @@ def test_deepl_istegi_dogru_bicimde(monkeypatch):
     assert '"target_lang":"TR"' in gelen["govde"].replace(" ", "")
 
 
+def test_deepl_istegi_sadece_ascii_karakter_icerir(monkeypatch):
+    """Özel karakterler kaçış koduyla gitmeli; karşı taraf harf kodlamasını yanlış tahmin edemesin."""
+    gelen = _sahte_deepl_sunucusu(monkeypatch, 200, {"translations": [{"text": "Sahra'nın Gözü"}]})
+    asyncio.run(ceviri._deepl_ile("Sahara’s Eye – Protégé"))
+    assert gelen["govde"].isascii()
+    assert "Sahara" + chr(92) + "u2019s" in gelen["govde"]   # ’ işareti kaçış koduyla (’) gitti
+
+
+def test_bozuk_ceviri_kaydedilmeden_once_onarilir(monkeypatch):
+    _servisleri_ayarla(monkeypatch, deepl="TedarikÃ§i ProgramÄ±nÄ± GeliÅŸtiriyor")
+    assert _cevir("Improves Supplier Program") == "Tedarikçi Programını Geliştiriyor"
+
+
+def test_veritabanindaki_bozuk_ceviri_okunurken_onarilir(monkeypatch):
+    _servisleri_ayarla(monkeypatch)
+    monkeypatch.setattr(ceviri, "_veritabanindan_oku", lambda anahtar: "Saharaâ€™nÄ±n GÃ¶zÃ¼")
+    assert _cevir("Eye of the Sahara (stored)") == "Sahara’nın Gözü"
+
+
 def test_deepl_hatasinda_anahtar_gorunmez(monkeypatch):
     _sahte_deepl_sunucusu(monkeypatch, 456, {"message": "Quota exceeded"})
     assert asyncio.run(ceviri._deepl_ile("Hello")) is None
@@ -200,8 +219,9 @@ def test_saglik_sayfasi_anahtari_gostermez(istemci, monkeypatch):
 # Haber kaynağındaki bozuk karakterler
 # ---------------------------------------------------------------------
 def test_bozuk_karakterler_onarilir():
-    from app.services.news import bozuk_karakterleri_onar
+    from app.services.ceviri import bozuk_karakterleri_onar
     assert bozuk_karakterleri_onar("Mentor-ProtÃ©gÃ© Agreement") == "Mentor-Protégé Agreement"
     assert bozuk_karakterleri_onar("NASAâ€™s rover") == "NASA’s rover"
     assert bozuk_karakterleri_onar("Normal başlık") == "Normal başlık"   # sağlam metne dokunma
+    assert bozuk_karakterleri_onar("Ä°stanbul'da Ã‡ok GÃ¼zel") == "İstanbul'da Çok Güzel"
     assert bozuk_karakterleri_onar(None) is None

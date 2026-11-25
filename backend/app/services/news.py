@@ -8,25 +8,9 @@ import httpx
 
 from app import cache
 from app.services import ceviri
+from app.services.ceviri import bozuk_karakterleri_onar
 
 HABER_URL = "https://api.spaceflightnewsapi.net/v4/articles/"
-
-
-# UTF-8 metin yanlışlıkla Windows-1252 sanılıp okununca ortaya çıkan karakterler ("é" -> "Ã©")
-_BOZUK_ISARETLER = ("Ã", "Â", "â€")
-
-
-def bozuk_karakterleri_onar(metin: str | None) -> str | None:
-    """
-    Haber kaynağı bazen "Protégé" yerine "ProtÃ©gÃ©" gönderiyor ("mojibake" denen bozulma).
-    Metni bozulduğu yoldan geri çeviriyoruz. Geri çeviri olmazsa metni olduğu gibi bırakıyoruz.
-    """
-    if not metin or not any(isaret in metin for isaret in _BOZUK_ISARETLER):
-        return metin
-    try:
-        return metin.encode("cp1252").decode("utf-8")
-    except UnicodeError:
-        return metin
 
 
 class HaberHatasi(Exception):
