@@ -39,6 +39,8 @@ HATIRLATMA_ALICISI = os.getenv("HATIRLATMA_ALICISI", "").strip() or GMAIL_ADRESI
 # (paylaşılan) IP adresine değil bu adrese bağlanır: 5.000 yerine 50.000 karakter/gün.
 # Render'da gerekli: Google ve anahtarsız MyMemory bulut sunucularından gelen istekleri engelliyor.
 MYMEMORY_EPOSTA = os.getenv("MYMEMORY_EPOSTA", "").strip()
+# DeepL çeviri anahtarı (deepl.com > hesap > API Keys). Ücretsiz anahtarlar ":fx" ile biter.
+DEEPL_API_KEY = os.getenv("DEEPL_API_KEY", "").strip()
 
 # E-postadaki "takvimi aç" linki için sitenin adresi
 SITE_ADRESI = os.getenv("SITE_ADRESI", "http://127.0.0.1:8000").rstrip("/")

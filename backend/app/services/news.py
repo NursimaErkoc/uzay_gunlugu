@@ -12,6 +12,23 @@ from app.services import ceviri
 HABER_URL = "https://api.spaceflightnewsapi.net/v4/articles/"
 
 
+# UTF-8 metin yanlışlıkla Windows-1252 sanılıp okununca ortaya çıkan karakterler ("é" -> "Ã©")
+_BOZUK_ISARETLER = ("Ã", "Â", "â€")
+
+
+def bozuk_karakterleri_onar(metin: str | None) -> str | None:
+    """
+    Haber kaynağı bazen "Protégé" yerine "ProtÃ©gÃ©" gönderiyor ("mojibake" denen bozulma).
+    Metni bozulduğu yoldan geri çeviriyoruz. Geri çeviri olmazsa metni olduğu gibi bırakıyoruz.
+    """
+    if not metin or not any(isaret in metin for isaret in _BOZUK_ISARETLER):
+        return metin
+    try:
+        return metin.encode("cp1252").decode("utf-8")
+    except UnicodeError:
+        return metin
+
+
 class HaberHatasi(Exception):
     """Haber servisi cevap vermediğinde fırlatılır."""
 
@@ -34,8 +51,8 @@ async def son_haberler(adet: int = 6) -> list[dict]:
     ham_haberler = cevap.json()["results"]
     haberler = [
         {
-            "baslik": h["title"],
-            "ozet": h["summary"],
+            "baslik": bozuk_karakterleri_onar(h["title"]),
+            "ozet": bozuk_karakterleri_onar(h["summary"]),
             "gorsel": h["image_url"],
             "kaynak": h["news_site"],
             "url": h["url"],

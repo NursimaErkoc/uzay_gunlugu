@@ -16,9 +16,16 @@ def _cevir(metin):
     return asyncio.run(gercek_cevir(metin))
 
 
-def _servisleri_ayarla(monkeypatch, google=None, mymemory=None):
+def _servisleri_ayarla(monkeypatch, google=None, mymemory=None, deepl=None):
     """Sahte servisler. Her çağrıyı 'cagrilar' listesine yazar ki kaç kez sorulduğunu sayabilelim."""
     cagrilar = []
+
+    async def sahte_deepl(metin):
+        if deepl is not None:   # anahtar tanımlı değilmiş gibi: sadece istenirse çağrıyı say
+            cagrilar.append("deepl")
+        return deepl
+
+    monkeypatch.setattr(ceviri, "_deepl_ile", sahte_deepl)
 
     async def sahte_google(metin):
         cagrilar.append("google")
@@ -83,7 +90,7 @@ def test_uzun_metin_cumle_sinirindan_bolunur():
 def test_saglik_sayfasi_ceviri_durumunu_gosterir(istemci):
     veri = istemci.get("/api/saglik").json()
     assert veri["durum"] == "çalışıyor"
-    assert set(veri["ceviri_son_hatalar"]) == {"google", "mymemory"}
+    assert set(veri["ceviri_son_hatalar"]) == {"deepl", "google", "mymemory"}
 
 
 def test_sayfa_dosyalari_onbellekte_bayat_kalmaz(istemci):
@@ -123,3 +130,78 @@ def test_mymemory_eposta_tanimliysa_istege_eklenir(monkeypatch):
 def test_mymemory_eposta_yoksa_gonderilmez(monkeypatch):
     _, giden = _mymemory_dene(monkeypatch, "")
     assert "de" not in giden[0]
+
+
+# ---------------------------------------------------------------------
+# DeepL
+# ---------------------------------------------------------------------
+def test_deepl_varsa_ilk_o_denenir(monkeypatch):
+    cagrilar = _servisleri_ayarla(monkeypatch, deepl="Merhaba", google="Selam")
+    assert _cevir("Hello from DeepL") == "Merhaba"
+    assert cagrilar == ["deepl"]
+
+
+def test_deepl_olmazsa_googlea_gecer(monkeypatch):
+    cagrilar = _servisleri_ayarla(monkeypatch, deepl="", google="Selam")
+    assert _cevir("Hello when DeepL fails") == "Selam"
+    assert cagrilar == ["deepl", "google"]
+
+
+def _sahte_deepl_sunucusu(monkeypatch, kod, govde):
+    import httpx
+    gelen = {}
+
+    def isleyici(istek):
+        gelen["adres"] = str(istek.url)
+        gelen["baslik"] = istek.headers.get("authorization")
+        gelen["govde"] = istek.content.decode()
+        return httpx.Response(kod, json=govde)
+
+    gercek = httpx.AsyncClient
+
+    class SahteIstemci(gercek):
+        def __init__(self, **ayarlar):
+            super().__init__(transport=httpx.MockTransport(isleyici), **ayarlar)
+
+    monkeypatch.setattr(httpx, "AsyncClient", SahteIstemci)
+    monkeypatch.setattr(ceviri, "DEEPL_API_KEY", "gizli-anahtar:fx")
+    return gelen
+
+
+def test_deepl_istegi_dogru_bicimde(monkeypatch):
+    gelen = _sahte_deepl_sunucusu(monkeypatch, 200, {"translations": [{"text": "Ay'a dönüş"}]})
+    assert asyncio.run(ceviri._deepl_ile("Return to the Moon")) == "Ay'a dönüş"
+    assert gelen["baslik"] == "DeepL-Auth-Key gizli-anahtar:fx"
+    assert '"target_lang":"TR"' in gelen["govde"].replace(" ", "")
+
+
+def test_deepl_hatasinda_anahtar_gorunmez(monkeypatch):
+    _sahte_deepl_sunucusu(monkeypatch, 456, {"message": "Quota exceeded"})
+    assert asyncio.run(ceviri._deepl_ile("Hello")) is None
+    assert ceviri.son_hatalar["deepl"] == "HTTP 456"
+    assert "gizli" not in str(ceviri.son_hatalar)
+
+
+def test_deepl_anahtari_yoksa_hic_istek_atilmaz(monkeypatch):
+    gelen = _sahte_deepl_sunucusu(monkeypatch, 200, {"translations": [{"text": "x"}]})
+    monkeypatch.setattr(ceviri, "DEEPL_API_KEY", "")
+    assert asyncio.run(ceviri._deepl_ile("Hello")) is None
+    assert gelen == {}
+
+
+def test_saglik_sayfasi_anahtari_gostermez(istemci, monkeypatch):
+    monkeypatch.setattr(ceviri, "DEEPL_API_KEY", "gizli-anahtar:fx")
+    cevap = istemci.get("/api/saglik").json()
+    assert cevap["deepl_anahtar_tanimli"] is True
+    assert "gizli" not in str(cevap)
+
+
+# ---------------------------------------------------------------------
+# Haber kaynağındaki bozuk karakterler
+# ---------------------------------------------------------------------
+def test_bozuk_karakterler_onarilir():
+    from app.services.news import bozuk_karakterleri_onar
+    assert bozuk_karakterleri_onar("Mentor-ProtÃ©gÃ© Agreement") == "Mentor-Protégé Agreement"
+    assert bozuk_karakterleri_onar("NASAâ€™s rover") == "NASA’s rover"
+    assert bozuk_karakterleri_onar("Normal başlık") == "Normal başlık"   # sağlam metne dokunma
+    assert bozuk_karakterleri_onar(None) is None
