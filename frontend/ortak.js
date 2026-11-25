@@ -46,6 +46,7 @@ const IKONLAR = {
   gunes: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   iss: '<path d="M2 8.5h5v7H2zM17 8.5h5v7h-5zM7 12h10M4.5 8.5v7M19.5 8.5v7"/><rect x="10" y="9.5" width="4" height="5" rx="1"/>',
   astronot: '<circle cx="12" cy="8" r="5"/><path d="M9.5 7.5a3 3 0 0 1 5 0"/><path d="M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/>',
+  indir: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/>',
   asteroit: '<path d="M8 3.5l6.5-.5 5 4 2 6-3 6-7 2-6.5-3L3 11z"/><circle cx="10" cy="9.5" r="1.6"/><circle cx="15" cy="14.5" r="1.1"/><circle cx="9" cy="15" r=".8"/>',
   goz: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   konum: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
@@ -328,5 +329,58 @@ function saatGun(iso) {
   return saat(iso) + gun;
 }
 
+// ---------------------------------------------------------------------
+// 6) UYGULAMA (PWA)
+//   a) Service worker'ı kaydet: sayfalar internetsiz de açılabilsin (ayrıntılar sw.js'de)
+//   b) "Uygulamayı yükle" düğmesi: tarayıcı kurulabilir olduğumuzu söyleyince menüde görünür
+//   c) İnternet kesilince üstte bir uyarı şeridi
+// ---------------------------------------------------------------------
+function uygulamaOzellikleriniBaslat() {
+  // a) Service worker sadece güvenli adreslerde (https veya localhost) çalışır
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => { /* olmazsa site yine normal çalışır */ });
+  }
+
+  const kurulu = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  const menu = document.querySelector(".menu");
+
+  // b) Chrome/Edge/Android: tarayıcı "beforeinstallprompt" olayını gönderirse kurulabiliriz.
+  //    Olayı saklayıp düğmeye basılınca tarayıcının kendi kurulum penceresini açıyoruz.
+  window.addEventListener("beforeinstallprompt", (olay) => {
+    olay.preventDefault();   // tarayıcının kendi küçük bildirimini gösterme, bizim düğmemizi kullan
+    if (!menu || menu.querySelector(".yukle-butonu")) return;
+    const dugme = document.createElement("button");
+    dugme.className = "yukle-butonu";
+    dugme.innerHTML = `${ikon("indir")}Uygulamayı yükle`;
+    dugme.addEventListener("click", async () => {
+      olay.prompt();
+      await olay.userChoice;
+      dugme.remove();   // kurulsa da vazgeçilse de bu olay bir kez kullanılabilir
+    });
+    menu.append(dugme);
+  });
+  window.addEventListener("appinstalled", () => menu?.querySelector(".yukle-butonu")?.remove());
+
+  //    iPhone/iPad (Safari) bu olayı desteklemiyor: altta kısa bir tarif gösteriyoruz
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const alt = document.querySelector(".alt");
+  if (ios && !kurulu && alt) {
+    alt.insertAdjacentHTML("beforeend",
+      `<p class="ios-notu">${ikon("indir")}Telefonuna uygulama olarak eklemek için: Safari'de <strong>Paylaş</strong> → <strong>Ana Ekrana Ekle</strong></p>`);
+  }
+
+  // c) Çevrimdışı uyarısı
+  const serit = document.createElement("div");
+  serit.className = "cevrimdisi-seridi";
+  serit.setAttribute("role", "status");
+  serit.innerHTML = `${ikon("uyari")}Çevrimdışısın: son kaydedilen bilgiler gösteriliyor`;
+  document.body.prepend(serit);
+  const guncelle = () => serit.classList.toggle("gorunur", !navigator.onLine);
+  window.addEventListener("online", guncelle);
+  window.addEventListener("offline", guncelle);
+  guncelle();
+}
+
 sabitIkonlariYerlestir();
 yildizlariBaslat();
+uygulamaOzellikleriniBaslat();

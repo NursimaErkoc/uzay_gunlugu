@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Uzay Günlüğü ikonu: ince çizgili hilal, onu dolanan noktalı yörünge ve küçük bir uydu.
+       Telefonlar ikonu daire/yuvarlak kare şeklinde kırpabildiği için çizim ortadaki
+       "güvenli alan" içinde duruyor. -->
+  <defs>
+    <radialGradient id="zemin" cx="50%" cy="42%" r="75%">
+      <stop offset="0" stop-color="#151a3a"/><stop offset=".7" stop-color="#060815"/><stop offset="1" stop-color="#010208"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#zemin)"/>
+  <!-- hilal -->
+  <path d="M280.8 147.7 A128 128 0 1 0 341.0 341.0 A102.4 102.4 0 1 1 280.8 147.7 Z" fill="none" stroke="#e8ebff" stroke-width="12" stroke-linejoin="round"/>
+  <!-- yörünge (noktalı) -->
+  <ellipse cx="256" cy="256" rx="200" ry="62" transform="rotate(-22 256 256)" fill="none" stroke="#8fa9ff"
+           stroke-width="6" stroke-opacity=".7" stroke-dasharray="2 16" stroke-linecap="round"/>
+  <!-- uydu: gövde, iki güneş paneli, anten -->
+  <g transform="translate(408 184) rotate(-22) scale(0.42)" fill="none" stroke="#e8ebff" stroke-width="23.8" stroke-linejoin="round">
+    <rect x="-40" y="-40" width="80" height="80" rx="10"/>
+    <path d="M-40 0 H-80 M40 0 H80"/>
+    <rect x="-180" y="-46" width="100" height="92" rx="6"/>
+    <rect x="80" y="-46" width="100" height="92" rx="6"/>
+    <path d="M-147 -46 V46 M-113 -46 V46 M113 -46 V46 M147 -46 V46" stroke-width="12" stroke-opacity=".6"/>
+    <path d="M0 -40 V-78"/>
+  </g>
+</svg>

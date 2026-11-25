@@ -813,6 +813,46 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .asteroit dd { margin: 0; font-variant-numeric: tabular-nums; }
 .asteroit dd small { display: block; color: var(--gri); font-size: 0.76rem; }
 
+/* ===== Uygulama (PWA) ===== */
+.yukle-butonu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--vurgu);
+  background: rgba(143, 169, 255, 0.12);
+  color: var(--yazi);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.yukle-butonu:hover { background: rgba(143, 169, 255, 0.22); }
+.ios-notu { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 14px 0 0; flex-wrap: wrap; }
+
+.cevrimdisi-seridi {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(243, 200, 111, 0.14);
+  border-bottom: 1px solid rgba(243, 200, 111, 0.35);
+  color: var(--sari);
+  font-size: 0.86rem;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.cevrimdisi-seridi.gorunur { display: flex; }
+
+/* Uygulama olarak açılınca (adres çubuğu yok) telefonun üst çentiğine yer bırak */
+@media (display-mode: standalone) {
+  .ust { padding-top: max(56px, calc(env(safe-area-inset-top) + 24px)); }
+}
+
 /* ===== Yükleniyor / hata ===== */
 .yukleniyor, .hata {
   display: flex;
