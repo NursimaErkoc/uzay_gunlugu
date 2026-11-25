@@ -64,7 +64,7 @@ backend/app/
   cache.py           hafıza + disk önbellek  mailer.py  Resend API (canlı) / Gmail SMTP (yerel)
   services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · iss.py · neo.py · epic.py · ceviri.py · reminders.py
 backend/data/        facts.json (64 bilgi) · meteor_showers.json
-backend/tests/       149 test (pytest)
+backend/tests/       175 test (pytest)
 frontend/            index.html · gokyuzu.html · iss.html · dunya.html · asteroitler.html · agirlik.html · gokharitasi.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · dunya.js · asteroitler.js · agirlik.js · gokharitasi.js · events.js · veri/gok.json (yıldız verisi; `araclar/gok_verisi_hazirla.py` üretir)
                      manifest.json · sw.js (service worker) · cevrimdisi.html · ikonlar/ (svg + 180/192/512 png)
 .github/workflows/   testler.yml · hatirlatmalar.yml (cron)
