@@ -650,6 +650,69 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 #gezegen-karti .aciklama-notu { margin-top: 14px; }
 
+/* ===== ISS ===== */
+.harita {
+  height: 440px;
+  border-radius: 12px;
+  border: 1px solid var(--kenar);
+  background: #0a0d1c;   /* harita karoları yüklenene kadar */
+  z-index: 0;            /* Leaflet'in katmanları sayfanın geri kalanının üstüne taşmasın */
+}
+@media (max-width: 640px) { .harita { height: 300px; } }
+
+/* Leaflet'in açık renkli parçalarını koyu temaya uydur */
+.leaflet-container { font-family: var(--metin-font); }
+.leaflet-control-attribution { background: rgba(1, 2, 8, 0.7) !important; color: var(--gri) !important; font-size: 0.66rem; }
+.leaflet-control-attribution a { color: var(--soluk-yazi) !important; }
+.leaflet-bar a { background: var(--kart-ic) !important; color: var(--yazi) !important; border-color: var(--kenar) !important; }
+.leaflet-bar { border: 1px solid var(--kenar) !important; }
+.leaflet-control-layers { background: rgba(8, 11, 26, 0.92) !important; color: var(--yazi); border: 1px solid var(--kenar) !important; border-radius: 10px !important; }
+.leaflet-control-layers-toggle { filter: invert(1) hue-rotate(180deg); }
+
+.iss-isareti { color: #fff; filter: drop-shadow(0 0 6px rgba(255, 162, 116, 0.9)); }
+.iss-isareti .ikon { width: 40px; height: 40px; }
+
+.harita-aciklamasi { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 2px 0; color: var(--soluk-yazi); font-size: 0.78rem; }
+.harita-aciklamasi span { display: inline-flex; align-items: center; gap: 6px; }
+.harita-aciklamasi .cizgi { width: 22px; height: 0; border-top: 2px solid; }
+.harita-aciklamasi .cizgi.gecmis { border-color: #8fa9ff; border-top-style: dashed; opacity: 0.7; }
+.harita-aciklamasi .cizgi.gelecek { border-color: #ffa274; }
+.harita-aciklamasi .kutu { width: 14px; height: 10px; border-radius: 2px; background: rgba(0, 0, 16, 0.6); border: 1px solid var(--kenar-guclu); }
+
+/* Sayı kutuları: Enlem, Boylam, Hız ... */
+.deger-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 10px; margin-top: 16px; }
+.deger-izgara > div { background: var(--kart-ic); border: 1px solid var(--kenar); border-radius: 12px; padding: 10px 14px; }
+.deger-izgara span { display: block; color: var(--soluk-yazi); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.deger-izgara strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+.deger-izgara .durum { text-transform: none; letter-spacing: normal; display: inline-flex; margin-top: 2px; }
+.deger-izgara .hata, .deger-izgara .yukleniyor { grid-column: 1 / -1; }
+
+/* Astronot kartları */
+.astronot-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-bottom: 26px; }
+.astronot {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--kart-ic);
+  border: 1px solid var(--kenar);
+  border-radius: 14px;
+  padding: 10px;
+  min-width: 0;
+}
+.astronot img, .astronot-yer-tutucu {
+  flex: none;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #000;
+  border: 1px solid var(--kenar-guclu);
+}
+.astronot-yer-tutucu { display: grid; place-items: center; color: var(--soluk-yazi); }
+.astronot strong { display: block; font-weight: 600; line-height: 1.3; }
+.astronot strong a { color: var(--yazi); }
+.astronot .soluk { margin: 0; font-size: 0.8rem; }
+.astronot-gorev { color: var(--etkinlik); font-size: 0.76rem; letter-spacing: 0.04em; }
+
 /* ===== Yükleniyor / hata ===== */
 .yukleniyor, .hata {
   display: flex;

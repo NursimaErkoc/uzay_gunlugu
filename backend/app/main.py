@@ -15,13 +15,14 @@ from contextlib import asynccontextmanager
 from datetime import date
 from typing import Literal
 
+import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app import cache, db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import ceviri, events, facts, gokyuzu, nasa, news, reminders
+from app.services import ceviri, events, facts, gokyuzu, iss, nasa, news, reminders
 
 
 # ---------------------------------------------------------------------
@@ -150,6 +151,24 @@ def bu_gece_gokyuzu(
         sonuc = gokyuzu.bu_gece(enlem, boylam)
         cache.kaydet(anahtar, sonuc, 10 * 60)   # 10 dakika
     return sonuc
+
+
+@app.get("/api/iss", tags=["ISS"])
+async def iss_nerede():
+    """ISS'in şu anki konumu, yüksekliği, hızı ve yörünge izi (yörünge verisinden hesaplanır)."""
+    try:
+        return await iss.iss_konumu()
+    except iss.IssHatasi as hata:
+        raise HTTPException(status_code=502, detail=str(hata))
+
+
+@app.get("/api/uzaydakiler", tags=["ISS"])
+async def uzaydaki_insanlar():
+    """Şu an uzayda bulunan insanlar, istasyonlara göre gruplanmış."""
+    try:
+        return await iss.uzaydakiler()
+    except httpx.HTTPError:
+        raise HTTPException(status_code=502, detail="Astronot listesi şu an alınamadı")
 
 
 # ---------------------------------------------------------------------
