@@ -38,7 +38,7 @@ NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberleri
 .venv\Scripts\python -m uvicorn app.main:app --reload --app-dir backend
 #   -> http://127.0.0.1:8000  (site)   http://127.0.0.1:8000/docs  (API)
 
-# Testler (şu an 112 test, hepsi geçiyor)
+# Testler (şu an 127 test, hepsi geçiyor)
 .venv\Scripts\python -m pytest -v
 
 # Paketler
@@ -62,10 +62,10 @@ backend/app/
   main.py            uç noktalar, yönetici anahtarı kontrolü, zamanlayıcı, önbellek başlıkları
   config.py          .env ayarları          db.py      SQLite/Postgres katmanı (pg8000)
   cache.py           hafıza + disk önbellek  mailer.py  Resend API (canlı) / Gmail SMTP (yerel)
-  services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · iss.py · ceviri.py · reminders.py
+  services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · iss.py · neo.py · ceviri.py · reminders.py
 backend/data/        facts.json (64 bilgi) · meteor_showers.json
-backend/tests/       112 test (pytest)
-frontend/            index.html · gokyuzu.html · iss.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · events.js
+backend/tests/       127 test (pytest)
+frontend/            index.html · gokyuzu.html · iss.html · asteroitler.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · asteroitler.js · events.js
 .github/workflows/   testler.yml · hatirlatmalar.yml (cron)
 ```
 
@@ -93,8 +93,9 @@ frontend/            index.html · gokyuzu.html · iss.html · events.html · st
 | Sonra | **ISS Şu An Nerede** (`iss.html`, `GET /api/iss`, `GET /api/uzaydakiler`): ISS konumu CelesTrak TLE + **sgp4** ile hesaplanıyor (TLE 6 saat diskte), Leaflet haritası (Esri karoları; CARTO artık anahtar istiyor), yörünge izi, gece tarafı gölgesi, Güneş ışığında/gölgede; uzaydakiler LL2 `astronauts` + `expeditions` ile istasyona göre gruplu (Starman ve Laika ayıklanıyor) |
 | Sonra | ISS TLE için **yedek kaynaklar** (CelesTrak → ARISS → wheretheiss.at → TLE API, son çare 7 günlük eski kayıt); canlıda CelesTrak Render'dan zaman aşımı veriyor, ARISS kullanılıyor. `/api/saglik` → `iss_tle` |
 | Sonra | **ISS'i Gör** (`GET /api/iss/gecisler`, ISS sayfasında kart): 10 günlük görünür geçişler (ISS >10° + ISS Güneş ışığında + gözlemcide Güneş < -6°), parlaklık tahmini, gölgeye girme, gökyüzü diyagramı, geri sayım. **Heavens-Above ile karşılaştırıldı** (Ankara, 12/12 geçiş, saniyeler içinde aynı). Şehir seçici `ortak.js`'e taşındı (`konumSeciciKur`), Bu Gece ve ISS sayfası aynı seçimi paylaşıyor |
+| Sonra | **Yaklaşan Asteroitler** (`asteroitler.html`, `GET /api/asteroitler`, `services/neo.py`): NASA NeoWs, 7 gün, 6 saat disk önbelleği. **NASA anahtarı ilk kez burada kullanılıyor.** ⚠️ NeoWs cevabındaki `links` alanı anahtarı içeriyor: sadece gereken alanlar tarayıcıya gönderiliyor, hata mesajlarına istek adresi yazılmıyor (testle korunuyor). Karşılaştırmalar (Ay'ın X katı, Galata Kulesi/futbol sahası/Eyfel, mermi/uçak hızı), logaritmik uzaklık çizelgesi (SVG, ipucu kutusu), "potansiyel tehlikeli" açıklaması |
 
-Son merge: **PR #10** (`iss-yedek-kaynak`). Üzerinde çalışılan dal: `iss-gor` (merge edilince burayı güncelle).
+Son merge: **PR #11** (`iss-gor`). Üzerinde çalışılan dal: `asteroitler` (merge edilince burayı güncelle).
 
 ## 6. ⏳ Açık konular (sırayla)
 
@@ -115,12 +116,12 @@ Son merge: **PR #10** (`iss-yedek-kaynak`). Üzerinde çalışılan dal: `iss-go
 
 ### 6.3 Küçük temizlikler
 - README yol haritasında **Adım 7 ve 8 hâlâ `[ ]`**. İşaretlenmeli, ayrıca README'ye canlı site linki eklenebilir.
-- Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`, `iss-canli`, `iss-yedek-kaynak`
+- Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`, `iss-canli`, `iss-yedek-kaynak`, `iss-gor`
   ```
-  git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak
-  git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak
+  git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor
+  git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor
   ```
-- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=5` → `?v=6` yapılmalı.
+- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=6` → `?v=7` yapılmalı.
 - Kullanıcı ileride site adresini değiştirmek isteyebilir: Render'da yeni servis açmak ya da alan adı bağlamak gerekir.
 
 ## 7. 🚀 Sırada: Yeni bölümler
@@ -129,9 +130,9 @@ Kullanıcı bu sırayla yapılmasını istedi (25 Kasım 2026):
 
 1. ~~**Bu Gece Gökyüzü**~~ ✅ (PR #8)
 2. ~~**ISS Şu An Nerede**~~ ✅ (PR #9, yedek TLE kaynakları PR #10)
-3. ~~**ISS'i Gör**~~ ✅ (dal: `iss-gor`)
-4. **Yaklaşan Asteroitler** ⬅️ SIRADAKİ: NASA NeoWs. Kullanıcının NASA anahtarı burada kullanılır. "Ay'dan X kat uzak" gibi karşılaştırmalar.
-5. **PWA:** Telefona uygulama gibi kurulabilme (manifest + service worker).
+3. ~~**ISS'i Gör**~~ ✅ (PR #11)
+4. ~~**Yaklaşan Asteroitler**~~ ✅ (dal: `asteroitler`)
+5. **PWA** ⬅️ SIRADAKİ: Telefona uygulama gibi kurulabilme (manifest + service worker).
 6. **Mars'tan Fotoğraflar:** NASA Mars gezginlerinin son fotoğrafları.
 7. **Dünya'nın Bugünkü Fotoğrafı:** NASA EPIC.
 8. **Gezegenlerde Ağırlığın:** Sadece frontend, eğlenceli hesaplayıcı.
@@ -139,6 +140,6 @@ Kullanıcı bu sırayla yapılmasını istedi (25 Kasım 2026):
 
 Önerilip seçilmeyenler: Uzay Havası (NOAA Kp), Favorilerim, Uzay Bilgi Yarışması.
 
-⚠️ Menüde şu an 4 bağlantı var (Günlük · Bu Gece · ISS · Uzay Takvimi). Yeni sayfalar eklendikçe menü kalabalıklaşacak; birkaç bölüm sonra menüyü gruplamak (ör. "Keşfet" açılır menüsü) gerekebilir.
+⚠️ Menüde şu an 5 bağlantı var (Günlük · Bu Gece · ISS · Asteroitler · Uzay Takvimi). Yeni sayfalar eklendikçe menü kalabalıklaşacak; birkaç bölüm sonra menüyü gruplamak (ör. "Keşfet" açılır menüsü) gerekebilir.
 
 Tasarım dili: koyu uzay teması, Michroma başlıklar / Exo 2 metin, **emoji yok**. İkonlar `frontend/ortak.js`'teki `IKONLAR` setinden (gerekirse yeni SVG eklenir). Renkler `style.css` başındaki CSS değişkenlerinde.

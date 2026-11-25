@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from app import cache, db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import ceviri, events, facts, gokyuzu, iss, nasa, news, reminders
+from app.services import ceviri, events, facts, gokyuzu, iss, nasa, neo, news, reminders
 
 
 # ---------------------------------------------------------------------
@@ -179,6 +179,15 @@ async def iss_gecisleri(
             raise HTTPException(status_code=502, detail=str(hata))
         cache.kaydet(anahtar, sonuc, 60 * 60)   # 1 saat (geçmişte kalan geçişler tarayıcıda ayıklanıyor)
     return sonuc
+
+
+@app.get("/api/asteroitler", tags=["NASA"])
+async def asteroitler():
+    """Önümüzdeki 7 günde Dünya'nın yakınından geçecek asteroitler (NASA NeoWs)."""
+    try:
+        return await neo.yaklasan_asteroitler()
+    except neo.AsteroitHatasi as hata:
+        raise HTTPException(status_code=502, detail=str(hata))
 
 
 @app.get("/api/uzaydakiler", tags=["ISS"])
