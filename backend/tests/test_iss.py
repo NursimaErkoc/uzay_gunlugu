@@ -62,6 +62,69 @@ def test_iss_api_veri_alinamazsa_502(istemci, monkeypatch):
     assert istemci.get("/api/iss").status_code == 502
 
 
+# --- Görünür geçişler (ISS'i Gör) ---
+# 25 Kasım 2026 tarihli TLE ve Heavens-Above'un (bilinen bir geçiş tahmin sitesi) aynı günlerde
+# Ankara için verdiği sonuçlar: 10 günde 12 görünür geçiş, ilki 25 Kasım 16:08:16 UTC (KKB'dan 10°),
+# en yükseği 30 Kasım 15:24:39'da 79°.
+TLE_25_KASIM = (
+    "1 25544U 98067A   26329.13827942  .00005490  00000-0  10559-3 0  9999",
+    "2 25544  51.6318 223.5847 0007441  62.8824 297.2922 15.49581740596707",
+)
+
+
+@pytest.fixture(scope="module")
+def ankara_gecisleri():
+    """Hesap ~1 saniye sürüyor; birkaç test aynı sonucu kullansın diye bir kez hesaplıyoruz."""
+    async def tle():
+        return TLE_25_KASIM
+    gercek = iss.tle_getir
+    iss.tle_getir = tle
+    try:
+        return asyncio.run(iss.gorunur_gecisler(39.93, 32.86, 10, datetime(2026, 11, 25, tzinfo=timezone.utc)))
+    finally:
+        iss.tle_getir = gercek
+
+
+def _saniye(iso):
+    return datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
+
+
+def test_gecis_sayisi_heavens_above_ile_ayni(ankara_gecisleri):
+    assert len(ankara_gecisleri["gecisler"]) == 12
+
+
+def test_ilk_gecis_heavens_above_ile_ayni(ankara_gecisleri):
+    ilk = ankara_gecisleri["gecisler"][0]
+    assert abs(_saniye(ilk["baslangic"]["zaman"]) - _saniye("2026-11-25T16:08:16Z")) < 30
+    assert ilk["baslangic"]["yon"] in ("Kuzey", "Kuzeybatı")
+    assert ilk["golgeye_girer"] is True   # Heavens-Above'da da en yüksek noktada bitiyor (gölgeye giriyor)
+
+
+def test_en_yuksek_gecis(ankara_gecisleri):
+    en_yuksek = max(ankara_gecisleri["gecisler"], key=lambda g: g["en_yuksek"]["yukseklik"])
+    assert en_yuksek["en_yuksek"]["zaman"].startswith("2026-11-30T15:2")
+    assert en_yuksek["en_yuksek"]["yukseklik"] == pytest.approx(79, abs=4)
+    assert en_yuksek["parlaklik"] == "Çok parlak"
+
+
+def test_gecislerin_ic_tutarliligi(ankara_gecisleri):
+    for g in ankara_gecisleri["gecisler"]:
+        assert g["baslangic"]["zaman"] <= g["en_yuksek"]["zaman"] <= g["bitis"]["zaman"]
+        assert g["en_yuksek"]["yukseklik"] >= max(g["baslangic"]["yukseklik"], g["bitis"]["yukseklik"])
+        assert all(iss.EN_AZ_YUKSEKLIK <= yukseklik <= 90 for _, yukseklik in g["yol"])
+        assert g["sure_sn"] > 0
+
+
+def test_gecisler_api(istemci, sabit_tle):
+    cevap = istemci.get("/api/iss/gecisler?enlem=41.01&boylam=28.98")
+    assert cevap.status_code == 200
+    assert cevap.json()["konum"] == {"enlem": 41.0, "boylam": 29.0}
+
+
+def test_gecisler_api_hatali_konum(istemci):
+    assert istemci.get("/api/iss/gecisler?enlem=100").status_code == 422
+
+
 # --- Yörünge verisi kaynakları ---
 @pytest.fixture
 def sahte_internet(monkeypatch):

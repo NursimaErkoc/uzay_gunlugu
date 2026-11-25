@@ -137,7 +137,19 @@ def _hesapla(uydu: Satrec, an: datetime) -> dict:
     x = r[0] * math.cos(aci) + r[1] * math.sin(aci)
     y = -r[0] * math.sin(aci) + r[1] * math.cos(aci)
     enlem, boylam, yukseklik = _enlem_boylam(x, y, r[2])
-    return {"r": r, "v": v, "enlem": enlem, "boylam": boylam, "yukseklik": yukseklik}
+    return {"r": r, "v": v, "dunya_xyz": (x, y, r[2]), "gmst": aci,
+            "enlem": enlem, "boylam": boylam, "yukseklik": yukseklik}
+
+
+def _astro_zaman(an: datetime) -> A.Time:
+    return A.Time.Make(an.year, an.month, an.day, an.hour, an.minute, an.second + an.microsecond / 1e6)
+
+
+def _gunes_yonu(an: datetime) -> list[float]:
+    """Dünya'nın merkezinden Güneş'e doğru birim vektör (uzaya sabit eksenlerde, sgp4 ile aynı)."""
+    g = A.GeoVector(A.Body.Sun, _astro_zaman(an), True)
+    uzunluk = math.sqrt(g.x**2 + g.y**2 + g.z**2)
+    return [g.x / uzunluk, g.y / uzunluk, g.z / uzunluk]
 
 
 def _gunes_durumu(r: tuple, an: datetime) -> tuple[bool, bool]:
@@ -146,12 +158,7 @@ def _gunes_durumu(r: tuple, an: datetime) -> tuple[bool, bool]:
     Dünya'nın gölgesini basitçe bir silindir gibi düşünüyoruz: ISS, Güneş'in tam ters tarafında
     ve Dünya'nın yarıçapı kadar bir silindirin içindeyse gölgededir.
     """
-    t = A.Time.Make(an.year, an.month, an.day, an.hour, an.minute, an.second)
-    g = A.GeoVector(A.Body.Sun, t, True)
-    gunes = (g.x * AU_KM, g.y * AU_KM, g.z * AU_KM)
-    gunes_uzunluk = math.sqrt(sum(c * c for c in gunes))
-    birim = [c / gunes_uzunluk for c in gunes]
-
+    birim = _gunes_yonu(an)
     izdusum = sum(a * b for a, b in zip(r, birim))   # ISS'in Güneş yönündeki bileşeni
     merkeze_uzaklik = math.sqrt(sum(c * c for c in r))
     eksene_uzaklik = math.sqrt(max(merkeze_uzaklik**2 - izdusum**2, 0))
@@ -189,6 +196,145 @@ async def iss_konumu(simdi: datetime | None = None) -> dict:
         "iz": iz,                 # [enlem, boylam] listesi, dakikada bir
         "iz_baslangic_dk": -45,   # iz[45] = şu an
         "tle_zamani": tle_zamani.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+
+# =====================================================================
+# ISS'i Gör: gözlemcinin bulunduğu yerden görünür geçişler
+# =====================================================================
+KABA_ADIM = 30         # saniye: ISS ufkun üstüne çıktı mı diye bu aralıkla bakılır
+INCE_ADIM = 10         # saniye: ufkun üstündeyken bu aralıkla ayrıntılı hesaplanır
+EN_AZ_YUKSEKLIK = 10   # derece: bunun altı ağaçlar/binalar yüzünden genelde görülmez
+KARANLIK = -6          # derece: gözlemcinin yerinde Güneş bundan alçaktaysa hava yeterince karanlık
+ISS_STANDART_KADIR = -1.8   # 1000 km uzaktan, yarısı aydınlık ISS'in parlaklığı
+
+
+def _gozlemci_xyz(enlem: float, boylam: float) -> tuple[float, float, float]:
+    """Gözlemcinin konumu, Dünya ile dönen eksenlerde (km). (Rakımı 0 kabul ediyoruz.)"""
+    e2 = BASIKLIK * (2 - BASIKLIK)
+    f, l = math.radians(enlem), math.radians(boylam)
+    n = DUNYA_YARICAPI / math.sqrt(1 - e2 * math.sin(f) ** 2)
+    return n * math.cos(f) * math.cos(l), n * math.cos(f) * math.sin(l), n * (1 - e2) * math.sin(f)
+
+
+def _gozlemciden(iss_xyz, gozlemci_xyz, enlem, boylam) -> tuple[float, float, float]:
+    """
+    ISS gözlemciden nasıl görünüyor? -> (yükseklik°, azimut°, uzaklık km)
+    Aradaki farkı gözlemcinin "Doğu - Kuzey - Yukarı" eksenlerine çeviriyoruz:
+    yukarı bileşeni büyükse ISS tepede, doğu/kuzey oranı da hangi yönde olduğunu verir.
+    """
+    dx, dy, dz = (a - b for a, b in zip(iss_xyz, gozlemci_xyz))
+    f, l = math.radians(enlem), math.radians(boylam)
+    dogu = -math.sin(l) * dx + math.cos(l) * dy
+    kuzey = -math.sin(f) * math.cos(l) * dx - math.sin(f) * math.sin(l) * dy + math.cos(f) * dz
+    yukari = math.cos(f) * math.cos(l) * dx + math.cos(f) * math.sin(l) * dy + math.sin(f) * dz
+    yukseklik = math.degrees(math.atan2(yukari, math.hypot(dogu, kuzey)))
+    azimut = math.degrees(math.atan2(dogu, kuzey)) % 360
+    return yukseklik, azimut, math.sqrt(dx * dx + dy * dy + dz * dz)
+
+
+def _kadir(nokta: dict, gozlemci_xyz, uzaklik: float, an: datetime) -> float:
+    """
+    ISS'in tahmini parlaklığı (kadir). İki şeye bağlı:
+      - uzaklık: uzaklaştıkça sönükleşir
+      - evre açısı: Güneş ISS'i bizim baktığımız taraftan aydınlatıyorsa daha parlak görünür (Ay gibi)
+    """
+    # Gözlemciyi de uzaya sabit eksenlere çevir (ISS'in konumu ve Güneş yönü o eksenlerde)
+    g = nokta["gmst"]
+    ox, oy, oz = gozlemci_xyz
+    gozlemci = (ox * math.cos(g) - oy * math.sin(g), ox * math.sin(g) + oy * math.cos(g), oz)
+    bize = [a - b for a, b in zip(gozlemci, nokta["r"])]
+    bize_uzunluk = math.sqrt(sum(c * c for c in bize))
+    cos_aci = sum(a * b / bize_uzunluk for a, b in zip(bize, _gunes_yonu(an)))
+    aci = math.acos(max(-1.0, min(1.0, cos_aci)))   # 0 = tam aydınlık yüz bize dönük
+    aydinlik = (math.sin(aci) + (math.pi - aci) * math.cos(aci)) / math.pi
+    aydinlik = max(aydinlik, 1e-3)
+    return ISS_STANDART_KADIR + 5 * math.log10(uzaklik / 1000) - 2.5 * math.log10(aydinlik * math.pi)
+
+
+def _iss_parlakligi(kadir: float) -> str:
+    if kadir < -3:
+        return "Çok parlak"
+    if kadir < -1.5:
+        return "Parlak"
+    return "Görülebilir"
+
+
+def _nokta(an: datetime, yukseklik: float, azimut: float) -> dict:
+    from app.services.gokyuzu import yon_adi
+    return {"zaman": an.strftime("%Y-%m-%dT%H:%M:%SZ"), "yukseklik": round(yukseklik),
+            "azimut": round(azimut), "yon": yon_adi(azimut)}
+
+
+def _gecisi_incele(uydu, bas: datetime, son: datetime, enlem, boylam, gozlemci_xyz, astro_gozlemci) -> dict | None:
+    """ISS'in ufkun üstünde olduğu bir aralığı ince adımlarla inceler. Görünür kısmı yoksa None."""
+    gorunur = []          # (an, yükseklik, azimut, uzaklık, nokta)
+    golgeye_girdi = False
+    an = bas
+    while an <= son:
+        nokta = _hesapla(uydu, an)
+        yukseklik, azimut, uzaklik = _gozlemciden(nokta["dunya_xyz"], gozlemci_xyz, enlem, boylam)
+        if yukseklik >= EN_AZ_YUKSEKLIK:
+            isikta, _ = _gunes_durumu(nokta["r"], an)
+            t = _astro_zaman(an)
+            gunes = A.Equator(A.Body.Sun, t, astro_gozlemci, True, True)
+            karanlik = A.Horizon(t, astro_gozlemci, gunes.ra, gunes.dec, A.Refraction.Normal).altitude < KARANLIK
+            if isikta and karanlik:
+                gorunur.append((an, yukseklik, azimut, uzaklik, nokta))
+            elif gorunur and not isikta:
+                golgeye_girdi = True   # görünürken Dünya'nın gölgesine girdi: gökyüzünün ortasında kaybolur
+                break
+        an += timedelta(seconds=INCE_ADIM)
+
+    if not gorunur:
+        return None
+    en_yuksek = max(gorunur, key=lambda g: g[1])
+    kadir = _kadir(en_yuksek[4], gozlemci_xyz, en_yuksek[3], en_yuksek[0])
+    ilk, sonuncu = gorunur[0], gorunur[-1]
+    return {
+        "baslangic": _nokta(ilk[0], ilk[1], ilk[2]),
+        "en_yuksek": _nokta(en_yuksek[0], en_yuksek[1], en_yuksek[2]),
+        "bitis": _nokta(sonuncu[0], sonuncu[1], sonuncu[2]),
+        "sure_sn": int((sonuncu[0] - ilk[0]).total_seconds()) + INCE_ADIM,
+        "golgeye_girer": golgeye_girdi,
+        "kadir": round(kadir, 1),
+        "parlaklik": _iss_parlakligi(kadir),
+        "yol": [[round(g[2]), round(g[1])] for g in gorunur],   # gökyüzü diyagramı için [azimut, yükseklik]
+    }
+
+
+async def gorunur_gecisler(enlem: float, boylam: float, gun: int = 10, simdi: datetime | None = None) -> dict:
+    """
+    Önümüzdeki `gun` gün içinde ISS'in bu konumdan çıplak gözle görülebileceği geçişler.
+    Görünmesi için üç şart: ISS ufkun 10° üstünde + gözlemcinin yerinde hava karanlık +
+    ISS'in kendisi Güneş ışığında (yüksekte olduğu için Güneş'i biz görmesek de o görür).
+    """
+    simdi = simdi or datetime.now(timezone.utc)
+    satir1, satir2 = await tle_getir()
+    uydu = Satrec.twoline2rv(satir1, satir2)
+    gozlemci_xyz = _gozlemci_xyz(enlem, boylam)
+    astro_gozlemci = A.Observer(enlem, boylam, 0)
+
+    gecisler = []
+    an, bitis = simdi, simdi + timedelta(days=gun)
+    ufukta_bas = None
+    while an <= bitis:
+        nokta = _hesapla(uydu, an)
+        yukseklik, _, _ = _gozlemciden(nokta["dunya_xyz"], gozlemci_xyz, enlem, boylam)
+        if yukseklik > 0 and ufukta_bas is None:
+            ufukta_bas = an - timedelta(seconds=KABA_ADIM)    # ufuktan çıktı (biraz geriden başla)
+        elif yukseklik <= 0 and ufukta_bas is not None:
+            gecis = _gecisi_incele(uydu, max(ufukta_bas, simdi), an, enlem, boylam, gozlemci_xyz, astro_gozlemci)
+            if gecis:
+                gecisler.append(gecis)
+            ufukta_bas = None
+        an += timedelta(seconds=KABA_ADIM)
+
+    return {
+        "konum": {"enlem": enlem, "boylam": boylam},
+        "hesaplama_zamani": simdi.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "gun": gun,
+        "gecisler": gecisler,
     }
 
 

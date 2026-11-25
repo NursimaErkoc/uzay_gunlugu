@@ -38,7 +38,7 @@ NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberleri
 .venv\Scripts\python -m uvicorn app.main:app --reload --app-dir backend
 #   -> http://127.0.0.1:8000  (site)   http://127.0.0.1:8000/docs  (API)
 
-# Testler (şu an 106 test, hepsi geçiyor)
+# Testler (şu an 112 test, hepsi geçiyor)
 .venv\Scripts\python -m pytest -v
 
 # Paketler
@@ -64,7 +64,7 @@ backend/app/
   cache.py           hafıza + disk önbellek  mailer.py  Resend API (canlı) / Gmail SMTP (yerel)
   services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · iss.py · ceviri.py · reminders.py
 backend/data/        facts.json (64 bilgi) · meteor_showers.json
-backend/tests/       106 test (pytest)
+backend/tests/       112 test (pytest)
 frontend/            index.html · gokyuzu.html · iss.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · events.js
 .github/workflows/   testler.yml · hatirlatmalar.yml (cron)
 ```
@@ -91,8 +91,10 @@ frontend/            index.html · gokyuzu.html · iss.html · events.html · st
 | Sonra | Çeviriler kalıcı olarak veritabanında (`ceviriler` tablosu), MyMemory yedeği, `/api/saglik` teşhisi |
 | Sonra | **Bu Gece Gökyüzü** (`gokyuzu.html`, `GET /api/gece`): Ay evresi çizimi, gün batımı/tam karanlık/gün doğumu, görünen gezegenler + gece çizelgesi, şehir listesi veya tarayıcı konumu (sunucuda 1 ondalığa yuvarlanır, 10 dk önbellek) |
 | Sonra | **ISS Şu An Nerede** (`iss.html`, `GET /api/iss`, `GET /api/uzaydakiler`): ISS konumu CelesTrak TLE + **sgp4** ile hesaplanıyor (TLE 6 saat diskte), Leaflet haritası (Esri karoları; CARTO artık anahtar istiyor), yörünge izi, gece tarafı gölgesi, Güneş ışığında/gölgede; uzaydakiler LL2 `astronauts` + `expeditions` ile istasyona göre gruplu (Starman ve Laika ayıklanıyor) |
+| Sonra | ISS TLE için **yedek kaynaklar** (CelesTrak → ARISS → wheretheiss.at → TLE API, son çare 7 günlük eski kayıt); canlıda CelesTrak Render'dan zaman aşımı veriyor, ARISS kullanılıyor. `/api/saglik` → `iss_tle` |
+| Sonra | **ISS'i Gör** (`GET /api/iss/gecisler`, ISS sayfasında kart): 10 günlük görünür geçişler (ISS >10° + ISS Güneş ışığında + gözlemcide Güneş < -6°), parlaklık tahmini, gölgeye girme, gökyüzü diyagramı, geri sayım. **Heavens-Above ile karşılaştırıldı** (Ankara, 12/12 geçiş, saniyeler içinde aynı). Şehir seçici `ortak.js`'e taşındı (`konumSeciciKur`), Bu Gece ve ISS sayfası aynı seçimi paylaşıyor |
 
-Son merge: **PR #8** (`bu-gece`). Üzerinde çalışılan dal: `iss-canli` (merge edilince burayı güncelle).
+Son merge: **PR #10** (`iss-yedek-kaynak`). Üzerinde çalışılan dal: `iss-gor` (merge edilince burayı güncelle).
 
 ## 6. ⏳ Açık konular (sırayla)
 
@@ -113,12 +115,12 @@ Son merge: **PR #8** (`bu-gece`). Üzerinde çalışılan dal: `iss-canli` (merg
 
 ### 6.3 Küçük temizlikler
 - README yol haritasında **Adım 7 ve 8 hâlâ `[ ]`**. İşaretlenmeli, ayrıca README'ye canlı site linki eklenebilir.
-- Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`
+- Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`, `iss-canli`, `iss-yedek-kaynak`
   ```
-  git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece
-  git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece
+  git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak
+  git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak
   ```
-- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=4` → `?v=5` yapılmalı.
+- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=5` → `?v=6` yapılmalı.
 - Kullanıcı ileride site adresini değiştirmek isteyebilir: Render'da yeni servis açmak ya da alan adı bağlamak gerekir.
 
 ## 7. 🚀 Sırada: Yeni bölümler
@@ -126,9 +128,9 @@ Son merge: **PR #8** (`bu-gece`). Üzerinde çalışılan dal: `iss-canli` (merg
 Kullanıcı bu sırayla yapılmasını istedi (25 Kasım 2026):
 
 1. ~~**Bu Gece Gökyüzü**~~ ✅ (PR #8)
-2. ~~**ISS Şu An Nerede**~~ ✅ (dal: `iss-canli`)
-3. **ISS'i Gör** ⬅️ SIRADAKİ: ISS'in kullanıcının şehrinden görünür geçişleri (ne zaman, hangi yönden, ne kadar parlak). Altyapı hazır: `services/iss.py` sgp4 ile konum hesaplıyor ve `_gunes_durumu` ISS'in Güneş ışığında olup olmadığını buluyor. Görünür geçiş = ISS ufkun >10° üstünde + ISS Güneş ışığında + gözlemcinin yerinde gece (Güneş < -6°). "Bu Gece" sayfasındaki şehir seçici yeniden kullanılabilir.
-4. **Yaklaşan Asteroitler:** NASA NeoWs. Kullanıcının NASA anahtarı burada kullanılır. "Ay'dan X kat uzak" gibi karşılaştırmalar.
+2. ~~**ISS Şu An Nerede**~~ ✅ (PR #9, yedek TLE kaynakları PR #10)
+3. ~~**ISS'i Gör**~~ ✅ (dal: `iss-gor`)
+4. **Yaklaşan Asteroitler** ⬅️ SIRADAKİ: NASA NeoWs. Kullanıcının NASA anahtarı burada kullanılır. "Ay'dan X kat uzak" gibi karşılaştırmalar.
 5. **PWA:** Telefona uygulama gibi kurulabilme (manifest + service worker).
 6. **Mars'tan Fotoğraflar:** NASA Mars gezginlerinin son fotoğrafları.
 7. **Dünya'nın Bugünkü Fotoğrafı:** NASA EPIC.

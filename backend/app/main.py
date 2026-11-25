@@ -163,6 +163,24 @@ async def iss_nerede():
         raise HTTPException(status_code=502, detail=str(hata))
 
 
+@app.get("/api/iss/gecisler", tags=["ISS"])
+async def iss_gecisleri(
+    enlem: float = Query(default=39.93, ge=-90, le=90, description="Enlem (Ankara: 39.93)"),
+    boylam: float = Query(default=32.86, ge=-180, le=180, description="Boylam (Ankara: 32.86)"),
+):
+    """Önümüzdeki 10 günde ISS'in bu konumdan çıplak gözle görülebileceği geçişler."""
+    enlem, boylam = round(enlem, 1), round(boylam, 1)   # gizlilik + önbellek (bkz. /api/gece)
+    anahtar = f"iss-gecis:{enlem}:{boylam}"
+    sonuc = cache.getir(anahtar)
+    if sonuc is None:
+        try:
+            sonuc = await iss.gorunur_gecisler(enlem, boylam)
+        except iss.IssHatasi as hata:
+            raise HTTPException(status_code=502, detail=str(hata))
+        cache.kaydet(anahtar, sonuc, 60 * 60)   # 1 saat (geçmişte kalan geçişler tarayıcıda ayıklanıyor)
+    return sonuc
+
+
 @app.get("/api/uzaydakiler", tags=["ISS"])
 async def uzaydaki_insanlar():
     """Şu an uzayda bulunan insanlar, istasyonlara göre gruplanmış."""

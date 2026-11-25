@@ -4,93 +4,10 @@
 // ikon(), metinTemizle(), yukleniyorHtml(), hataHtml() -> ortak.js'den geliyor.
 // =====================================================================
 
-const SEHIRLER = [
-  { ad: "Adana", enlem: 37.0, boylam: 35.32 },
-  { ad: "Ankara", enlem: 39.93, boylam: 32.86 },
-  { ad: "Antalya", enlem: 36.89, boylam: 30.71 },
-  { ad: "Bursa", enlem: 40.19, boylam: 29.06 },
-  { ad: "Diyarbakır", enlem: 37.91, boylam: 40.23 },
-  { ad: "Erzurum", enlem: 39.9, boylam: 41.27 },
-  { ad: "Eskişehir", enlem: 39.78, boylam: 30.52 },
-  { ad: "Gaziantep", enlem: 37.07, boylam: 37.38 },
-  { ad: "İstanbul", enlem: 41.01, boylam: 28.98 },
-  { ad: "İzmir", enlem: 38.42, boylam: 27.14 },
-  { ad: "Kayseri", enlem: 38.73, boylam: 35.48 },
-  { ad: "Konya", enlem: 37.87, boylam: 32.48 },
-  { ad: "Samsun", enlem: 41.29, boylam: 36.33 },
-  { ad: "Trabzon", enlem: 41.0, boylam: 39.72 },
-  { ad: "Van", enlem: 38.49, boylam: 43.38 },
-];
-const KAYIT_ANAHTARI = "uzay-gunlugu-konum";
-
-const sehirKutusu = document.getElementById("sehir");
-const konumButonu = document.getElementById("konumumu-kullan");
-const konumMesaji = document.getElementById("konum-mesaji");
-const VARSAYILAN_MESAJ = konumMesaji.textContent;
+// Konum seçici, saat() ve saatGun() de ortak.js'de (ISS sayfası da kullanıyor).
 
 // ---------------------------------------------------------------------
-// 1) Konum seçimi
-// Seçilen konum tarayıcıda (localStorage) hatırlanır. localStorage bazı durumlarda
-// (gizli sekme vb.) çalışmayabilir; o yüzden try/catch içinde kullanıyoruz.
-// ---------------------------------------------------------------------
-function kayitliKonum() {
-  try {
-    const konum = JSON.parse(localStorage.getItem(KAYIT_ANAHTARI));
-    // Bozuk ya da eski biçimli bir kayıt varsa kullanma
-    return konum && typeof konum.enlem === "number" && typeof konum.boylam === "number" ? konum : null;
-  } catch {
-    return null;
-  }
-}
-
-function konumuKaydet(konum) {
-  try {
-    localStorage.setItem(KAYIT_ANAHTARI, JSON.stringify(konum));
-  } catch { /* kaydedemezsek sorun değil */ }
-}
-
-function sehirListesiniDoldur(secili) {
-  const secenekler = SEHIRLER.map((s) =>
-    `<option value="${s.ad}" ${s.ad === secili ? "selected" : ""}>${s.ad}</option>`);
-  if (secili === "Konumum") secenekler.unshift(`<option value="Konumum" selected>Konumum</option>`);
-  sehirKutusu.innerHTML = secenekler.join("");
-}
-
-sehirKutusu.addEventListener("change", () => {
-  const sehir = SEHIRLER.find((s) => s.ad === sehirKutusu.value);
-  if (!sehir) return;
-  sehirListesiniDoldur(sehir.ad);   // "Konumum" seçeneği listeden kalksın
-  konumuKaydet(sehir);
-  konumMesaji.textContent = VARSAYILAN_MESAJ;
-  geceyiGetir(sehir);
-});
-
-konumButonu.addEventListener("click", () => {
-  if (!navigator.geolocation) {
-    konumMesaji.textContent = "Tarayıcın konum özelliğini desteklemiyor.";
-    return;
-  }
-  konumMesaji.textContent = "Konum alınıyor…";
-  navigator.geolocation.getCurrentPosition(
-    (yer) => {
-      const konum = {
-        ad: "Konumum",
-        // 2 ondalık (~1 km) yeterli; sunucu zaten 1 ondalığa yuvarlıyor
-        enlem: Number(yer.coords.latitude.toFixed(2)),
-        boylam: Number(yer.coords.longitude.toFixed(2)),
-      };
-      sehirListesiniDoldur("Konumum");
-      konumuKaydet(konum);
-      konumMesaji.textContent = `Konumun kullanılıyor (yaklaşık). ${VARSAYILAN_MESAJ}`;
-      geceyiGetir(konum);
-    },
-    () => { konumMesaji.textContent = "Konum alınamadı. İzin vermediysen listeden şehir seçebilirsin."; },
-    { timeout: 10000, maximumAge: 10 * 60 * 1000 },
-  );
-});
-
-// ---------------------------------------------------------------------
-// 2) Veriyi getir
+// 1) Veriyi getir
 // ---------------------------------------------------------------------
 async function geceyiGetir(konum) {
   const kutular = ["ay-icerik", "gunes-icerik", "gezegen-icerik"].map((id) => document.getElementById(id));
@@ -107,29 +24,6 @@ async function geceyiGetir(konum) {
   }
 }
 
-// ---------------------------------------------------------------------
-// 3) Zaman yazdırma yardımcıları
-// Sunucu zamanları UTC gönderiyor ("...Z"). new Date() bunu otomatik olarak
-// cihazın saat dilimine çevirir.
-// ---------------------------------------------------------------------
-function saat(iso) {
-  return new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-}
-
-// Bugün değilse saatin yanına "yarın" ya da tarih ekle
-function saatGun(iso) {
-  if (!iso) return "—";
-  const tarih = new Date(iso);
-  const bugun = new Date();
-  const yarin = new Date(); yarin.setDate(bugun.getDate() + 1);
-  const dun = new Date(); dun.setDate(bugun.getDate() - 1);
-  const ayniGun = (a, b) => a.toDateString() === b.toDateString();
-  let gun = "";
-  if (ayniGun(tarih, yarin)) gun = " (yarın)";
-  else if (ayniGun(tarih, dun)) gun = " (dün)";
-  else if (!ayniGun(tarih, bugun)) gun = ` (${tarih.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })})`;
-  return saat(iso) + gun;
-}
 
 function tarihUzun(iso) {
   return new Date(iso).toLocaleDateString("tr-TR", { day: "numeric", month: "long", weekday: "long" });
@@ -141,7 +35,7 @@ function gunSonra(iso) {
 }
 
 // ---------------------------------------------------------------------
-// 4) Ay kartı
+// 2) Ay kartı
 // ---------------------------------------------------------------------
 /**
  * Ay'ın evresini SVG olarak çizer.
@@ -196,7 +90,7 @@ function ayGoster(ay) {
 }
 
 // ---------------------------------------------------------------------
-// 5) Güneş kartı
+// 3) Güneş kartı
 // ---------------------------------------------------------------------
 function gunesGoster(gunes) {
   const kutu = document.getElementById("gunes-icerik");
@@ -215,7 +109,7 @@ function gunesGoster(gunes) {
 }
 
 // ---------------------------------------------------------------------
-// 6) Gezegenler kartı
+// 4) Gezegenler kartı
 // Her gezegen için gece boyunca görünür olduğu saatleri gösteren bir çubuk çiziyoruz.
 // Çubuğun solu gün batımı, sağı gün doğumu.
 // ---------------------------------------------------------------------
@@ -282,8 +176,11 @@ function gezegenleriGoster(gezegenler, gunes) {
 }
 
 // ---------------------------------------------------------------------
-// Sayfa açılınca: kayıtlı konum varsa onu, yoksa Ankara'yı kullan
+// Sayfa açılınca: konum seçiciyi kur (kayıtlı konum ya da Ankara ile başlar)
 // ---------------------------------------------------------------------
-const baslangicKonumu = kayitliKonum() || SEHIRLER.find((s) => s.ad === "Ankara");
-sehirListesiniDoldur(baslangicKonumu.ad);
-geceyiGetir(baslangicKonumu);
+konumSeciciKur({
+  secimKutusu: document.getElementById("sehir"),
+  konumButonu: document.getElementById("konumumu-kullan"),
+  mesajKutusu: document.getElementById("konum-mesaji"),
+  degisince: geceyiGetir,
+});
