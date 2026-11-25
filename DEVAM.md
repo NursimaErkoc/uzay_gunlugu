@@ -28,7 +28,7 @@ NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberleri
 - Merge sonrası **Render otomatik yayına alıyor** (2-4 dk).
 - Ortam: **Windows 11, VS Code, PowerShell**. Python 3.14.10, sanal ortam `.venv`.
 - ⚠️ **Windows Akıllı Uygulama Denetimi**, derlenmiş DLL içeren paketleri engelliyor (SQLAlchemy/SQLModel engellendi). **Saf Python paketleri tercih edilmeli** (bu yüzden `sqlite3` ve `pg8000` kullanıldı).
-- `uvicorn.exe` bazen "Permission denied" verebiliyor. O zaman `python -m uvicorn` kullanılır.
+- `.exe` dosyaları (uvicorn.exe, pip.exe) Uygulama Denetimi tarafından engellenebiliyor. Her zaman `python -m uvicorn` ve `python -m pip` kullanılmalı.
 - Kullanıcıdan asla şifre/anahtar istenmez; sohbete yazdırılmaz. `.env` okunurken değerler gizlenmeli.
 
 ## 3. Komutlar
@@ -38,7 +38,7 @@ NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberleri
 .venv\Scripts\python -m uvicorn app.main:app --reload --app-dir backend
 #   -> http://127.0.0.1:8000  (site)   http://127.0.0.1:8000/docs  (API)
 
-# Testler (şu an 91 test, hepsi geçiyor)
+# Testler (şu an 101 test, hepsi geçiyor)
 .venv\Scripts\python -m pytest -v
 
 # Paketler
@@ -62,10 +62,10 @@ backend/app/
   main.py            uç noktalar, yönetici anahtarı kontrolü, zamanlayıcı, önbellek başlıkları
   config.py          .env ayarları          db.py      SQLite/Postgres katmanı (pg8000)
   cache.py           hafıza + disk önbellek  mailer.py  Resend API (canlı) / Gmail SMTP (yerel)
-  services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · ceviri.py · reminders.py
+  services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · iss.py · ceviri.py · reminders.py
 backend/data/        facts.json (64 bilgi) · meteor_showers.json
-backend/tests/       91 test (pytest)
-frontend/            index.html · gokyuzu.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · events.js
+backend/tests/       101 test (pytest)
+frontend/            index.html · gokyuzu.html · iss.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · events.js
 .github/workflows/   testler.yml · hatirlatmalar.yml (cron)
 ```
 
@@ -90,8 +90,9 @@ frontend/            index.html · gokyuzu.html · events.html · style.css · o
 | Sonra | Tarayıcı önbelleği düzeltmesi (`Cache-Control: no-cache` + `?v=2` sürüm etiketleri) |
 | Sonra | Çeviriler kalıcı olarak veritabanında (`ceviriler` tablosu), MyMemory yedeği, `/api/saglik` teşhisi |
 | Sonra | **Bu Gece Gökyüzü** (`gokyuzu.html`, `GET /api/gece`): Ay evresi çizimi, gün batımı/tam karanlık/gün doğumu, görünen gezegenler + gece çizelgesi, şehir listesi veya tarayıcı konumu (sunucuda 1 ondalığa yuvarlanır, 10 dk önbellek) |
+| Sonra | **ISS Şu An Nerede** (`iss.html`, `GET /api/iss`, `GET /api/uzaydakiler`): ISS konumu CelesTrak TLE + **sgp4** ile hesaplanıyor (TLE 6 saat diskte), Leaflet haritası (Esri karoları; CARTO artık anahtar istiyor), yörünge izi, gece tarafı gölgesi, Güneş ışığında/gölgede; uzaydakiler LL2 `astronauts` + `expeditions` ile istasyona göre gruplu (Starman ve Laika ayıklanıyor) |
 
-Son merge: **PR #7** (`ceviri-teshis`). Üzerinde çalışılan dal: `bu-gece` (merge edilince burayı güncelle).
+Son merge: **PR #8** (`bu-gece`). Üzerinde çalışılan dal: `iss-canli` (merge edilince burayı güncelle).
 
 ## 6. ⏳ Açık konular (sırayla)
 
@@ -112,24 +113,30 @@ Son merge: **PR #7** (`ceviri-teshis`). Üzerinde çalışılan dal: `bu-gece` (
 
 ### 6.3 Küçük temizlikler
 - README yol haritasında **Adım 7 ve 8 hâlâ `[ ]`**. İşaretlenmeli, ayrıca README'ye canlı site linki eklenebilir.
-- Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`
+- Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`
   ```
-  git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis
-  git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis
+  git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece
+  git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece
   ```
-- CSS/JS'te büyük değişiklik yapınca `index.html`, `gokyuzu.html` ve `events.html`'deki `?v=3` → `?v=4` yapılmalı.
+- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=4` → `?v=5` yapılmalı.
 - Kullanıcı ileride site adresini değiştirmek isteyebilir: Render'da yeni servis açmak ya da alan adı bağlamak gerekir.
 
 ## 7. 🚀 Sırada: Yeni bölümler
 
-1 numara yapıldı. **Önerilen sıradaki: 3 (ISS Şu An Nerede).**
+Kullanıcı bu sırayla yapılmasını istedi (25 Kasım 2026):
 
-1. ~~**Bu Gece Gökyüzü**~~ ✅ tamamlandı (dal: `bu-gece`).
-2. **ISS'i Gör:** ISS'in kullanıcının şehrinden görünür geçişleri. Yörünge kütüphanesinin Windows'ta engellenmeden çalıştığı önce kontrol edilmeli.
-3. **ISS Şu An Nerede:** Canlı harita (Leaflet) + şu an uzayda kimler var.
-4. **Uzay Havası:** Kutup ışığı ihtimali (NOAA Kp endeksi) + grafik.
-5. **Yaklaşan Asteroitler:** NASA NeoWs. Kullanıcının NASA anahtarı burada kullanılır.
-6. **Favorilerim:** Beğenilen APOD'ları kaydetme (yeni tablo + yönetici girişi).
-7. **PWA:** Telefona uygulama gibi kurulabilme.
+1. ~~**Bu Gece Gökyüzü**~~ ✅ (PR #8)
+2. ~~**ISS Şu An Nerede**~~ ✅ (dal: `iss-canli`)
+3. **ISS'i Gör** ⬅️ SIRADAKİ: ISS'in kullanıcının şehrinden görünür geçişleri (ne zaman, hangi yönden, ne kadar parlak). Altyapı hazır: `services/iss.py` sgp4 ile konum hesaplıyor ve `_gunes_durumu` ISS'in Güneş ışığında olup olmadığını buluyor. Görünür geçiş = ISS ufkun >10° üstünde + ISS Güneş ışığında + gözlemcinin yerinde gece (Güneş < -6°). "Bu Gece" sayfasındaki şehir seçici yeniden kullanılabilir.
+4. **Yaklaşan Asteroitler:** NASA NeoWs. Kullanıcının NASA anahtarı burada kullanılır. "Ay'dan X kat uzak" gibi karşılaştırmalar.
+5. **PWA:** Telefona uygulama gibi kurulabilme (manifest + service worker).
+6. **Mars'tan Fotoğraflar:** NASA Mars gezginlerinin son fotoğrafları.
+7. **Dünya'nın Bugünkü Fotoğrafı:** NASA EPIC.
+8. **Gezegenlerde Ağırlığın:** Sadece frontend, eğlenceli hesaplayıcı.
+9. **Gök Haritası:** Bu gecenin yıldız/takımyıldız haritası (şehre göre).
+
+Önerilip seçilmeyenler: Uzay Havası (NOAA Kp), Favorilerim, Uzay Bilgi Yarışması.
+
+⚠️ Menüde şu an 4 bağlantı var (Günlük · Bu Gece · ISS · Uzay Takvimi). Yeni sayfalar eklendikçe menü kalabalıklaşacak; birkaç bölüm sonra menüyü gruplamak (ör. "Keşfet" açılır menüsü) gerekebilir.
 
 Tasarım dili: koyu uzay teması, Michroma başlıklar / Exo 2 metin, **emoji yok**. İkonlar `frontend/ortak.js`'teki `IKONLAR` setinden (gerekirse yeni SVG eklenir). Renkler `style.css` başındaki CSS değişkenlerinde.
