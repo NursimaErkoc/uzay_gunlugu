@@ -1,21 +1,48 @@
 # 🚀 Uzay Günlüğü
 
-NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberlerini ve bu ayın uzay olaylarını gösteren, olaylar için e-posta hatırlatması gönderebilen bir web sitesi.
+Her gün evrene yeni bir pencere açan, Türkçe bir uzay sitesi. Telefona uygulama olarak da kurulabilir.
 
+**Canlı site:** https://uzay-gunlugu.onrender.com
 
+## Bölümler
+| Sayfa | Ne gösteriyor? |
+|---|---|
+| **Günlük** | NASA'nın günün fotoğrafı, günün uzay bilgisi, güncel uzay haberleri (Türkçe çeviriyle) |
+| **Bu Gece** | Seçilen şehirde Ay'ın evresi, gün batımı/doğumu, bu gece görülebilen gezegenler |
+| **ISS** | Uluslararası Uzay İstasyonu'nun canlı konumu, şehrinin üstünden ne zaman geçeceği, uzaydaki astronotlar |
+| **Dünya** | NASA EPIC uydusunun 1,5 milyon km uzaktan çektiği fotoğraflarla Dünya'nın bir günlük dönüşü |
+| **Asteroitler** | Bu hafta Dünya'nın yakınından geçen asteroitler, gündelik karşılaştırmalarla |
+| **Ağırlık** | Gezegenlerde ve Ay'da ne kadar ağır olurdun, ne kadar yükseğe zıplardın |
+| **Gök Haritası** | Seçilen şehir ve saatte gökyüzü: yıldızlar, Türkçe adlı takımyıldızlar, Ay ve gezegenler |
+| **Uzay Takvimi** | Bu ayın gökyüzü olayları ve roket fırlatmaları; istenen olaylar için e-posta hatırlatması |
 
 ## Teknolojiler
 - **Backend:** Python + FastAPI
-- **Frontend:** HTML, CSS, JavaScript
-- **Veritabanı:** SQLite (Python'un yerleşik sqlite3 modülü)
-- **Veri kaynakları:** NASA APOD (science.nasa.gov), Spaceflight News API, Launch Library 2, Astronomy Engine
+- **Frontend:** HTML, CSS, JavaScript (kütüphanesiz; harita için Leaflet), PWA (çevrimdışı çalışma)
+- **Veritabanı:** SQLite (yerelde), PostgreSQL / Neon (canlıda)
+- **Hesaplamalar:** Astronomy Engine (Ay, Güneş, gezegenler), sgp4 (ISS yörüngesi)
+- **Veri kaynakları:** NASA APOD, NASA NeoWs, NASA EPIC, Spaceflight News API, Launch Library 2,
+  CelesTrak (ISS yörünge bilgisi), d3-celestial (yıldız kataloğu)
+- **Yayın:** Render (site), GitHub Actions (testler ve zamanlanmış hatırlatma kontrolü)
 
 ## Kurulum
 ```bash
 python -m venv .venv
 .venv\Scripts\activate        # Windows
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 copy .env.example .env        # sonra .env içine kendi anahtarlarını yaz
+```
+
+Çalıştırmak için:
+```bash
+python -m uvicorn app.main:app --reload --app-dir backend
+```
+Sonra tarayıcıda http://127.0.0.1:8000 adresini aç. API dokümantasyonu: http://127.0.0.1:8000/docs
+
+Testler:
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest
 ```
 
 ## Yol haritası
@@ -26,5 +53,11 @@ copy .env.example .env        # sonra .env içine kendi anahtarlarını yaz
 - [x] Adım 4: Günün bilgisi ve haberler
 - [x] Adım 5: Aylık uzay olayları
 - [x] Adım 6: E-posta hatırlatmaları
-- [ ] Adım 7: Testler ve GitHub Actions
-- [ ] Adım 8: İnternete yayınlama
+- [x] Adım 7: Testler ve GitHub Actions
+- [x] Adım 8: İnternete yayınlama
+- [x] Adım 9: Yeni bölümler: Bu Gece, ISS, Asteroitler, Dünya, Ağırlık, Gök Haritası
+- [x] Adım 10: Telefona kurulabilen uygulama (PWA) ve gruplu menü
+
+## Lisanslar ve teşekkür
+Yıldız ve takımyıldız verisi [d3-celestial](https://github.com/ofrohn/d3-celestial) projesinden alınmıştır
+(© 2015 Olaf Frohn, BSD 3-Clause lisansı). Fotoğraflar ve veriler NASA'ya aittir.
