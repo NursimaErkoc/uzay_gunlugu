@@ -62,6 +62,65 @@ def test_iss_api_veri_alinamazsa_502(istemci, monkeypatch):
     assert istemci.get("/api/iss").status_code == 502
 
 
+# --- Yörünge verisi kaynakları ---
+@pytest.fixture
+def sahte_internet(monkeypatch):
+    """
+    httpx'in gerçek internete çıkmasını engeller. Test, hangi sunucunun ne cevap vereceğini
+    'cevaplar' sözlüğüne yazar: {sunucu_adı: (durum_kodu, metin)} ya da {sunucu_adı: "zaman_asimi"}.
+    """
+    cevaplar = {}
+    monkeypatch.setattr(iss, "durum", {"tle_kaynagi": None, "tle_hatalari": {}})   # her test temiz başlasın
+
+    def isleyici(istek):
+        cevap = cevaplar.get(istek.url.host, "zaman_asimi")
+        if cevap == "zaman_asimi":
+            raise httpx.ConnectTimeout("cevap yok", request=istek)
+        return httpx.Response(cevap[0], text=cevap[1])
+
+    gercek = httpx.AsyncClient
+
+    class SahteIstemci(gercek):
+        def __init__(self, **ayarlar):
+            super().__init__(transport=httpx.MockTransport(isleyici), **ayarlar)
+
+    monkeypatch.setattr(httpx, "AsyncClient", SahteIstemci)
+    return cevaplar
+
+
+def test_celestrak_cevap_vermezse_yedek_kaynak(sahte_internet):
+    # CelesTrak zaman aşımı verir, ARISS cevap verir
+    sahte_internet["live.ariss.org"] = (200, "ISS (ZARYA)\n" + "\n".join(TLE))
+    assert asyncio.run(iss.tle_getir()) == TLE
+    assert iss.durum["tle_kaynagi"] == "ARISS"
+    assert iss.durum["tle_hatalari"]["CelesTrak"] == "ConnectTimeout"
+
+
+def test_json_kaynak(sahte_internet):
+    import json
+    sahte_internet["api.wheretheiss.at"] = (200, json.dumps({"line1": TLE[0], "line2": TLE[1]}))
+    assert asyncio.run(iss.tle_getir()) == TLE
+    assert iss.durum["tle_kaynagi"] == "wheretheiss.at"
+
+
+def test_hicbir_kaynak_yoksa_eski_kayit(sahte_internet):
+    from app import cache
+    cache.kaydet("iss:tle:yedek", list(TLE), 60)   # daha önce alınmış eski TLE
+    assert asyncio.run(iss.tle_getir()) == TLE
+    assert "eski kayıt" in iss.durum["tle_kaynagi"]
+
+
+def test_hicbir_kaynak_ve_eski_kayit_yoksa_hata(sahte_internet):
+    with pytest.raises(iss.IssHatasi):
+        asyncio.run(iss.tle_getir())
+
+
+def test_baska_uydunun_verisi_reddedilir():
+    baska_uydu = "1 20580U 90037B   26328.5  .00001  00000+0  50000-4 0  9990\n2 20580  28.4700 100.0 0002 90.0 270.0 15.10"
+    with pytest.raises(ValueError):
+        iss.tle_ayikla(baska_uydu, "metin")
+
+
 # --- Uzaydakiler ---
 def _astronot(id, ad, **ekstra):
     a = {"id": id, "name": ad, "type": {"name": "Government"}, "date_of_death": None,
