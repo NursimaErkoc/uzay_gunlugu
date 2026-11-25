@@ -4,8 +4,9 @@
 Sırayla şunlara bakar:
   1) Hafızadaki önbellek          (en hızlı)
   2) Veritabanındaki çeviriler    (kalıcı: sunucu yeniden başlasa da kaybolmaz)
-  3) Google Translate (ücretsiz, resmi olmayan uç nokta)
-  4) MyMemory (yedek: Google cevap vermezse)
+  3) DeepL (anahtar tanımlıysa; ayda 500 bin karakter ücretsiz, en kaliteli)
+  4) Google Translate (ücretsiz, resmi olmayan uç nokta; Render'dan gelen istekleri engelliyor)
+  5) MyMemory (son yedek; Render'da kotası başka sitelerle paylaşıldığı için çabuk doluyor)
 
 Neden veritabanı? Render'ın ücretsiz sunucusu uyuyup uyanınca diski siliniyor. Çevirileri
 sadece diskte tutunca her uyanışta yüzlerce metni baştan çevirtiyorduk; bu kadar çok istek
@@ -22,16 +23,18 @@ from datetime import datetime, timezone
 import httpx
 
 from app import cache, db
-from app.config import MYMEMORY_EPOSTA
+from app.config import DEEPL_API_KEY, MYMEMORY_EPOSTA
 
 GOOGLE_URL = "https://translate.googleapis.com/translate_a/single"
 MYMEMORY_URL = "https://api.mymemory.translated.net/get"
+# Ücretsiz DeepL anahtarları ":fx" ile biter ve ayrı bir adres kullanır
+DEEPL_URL = ("https://api-free.deepl.com" if DEEPL_API_KEY.endswith(":fx") else "https://api.deepl.com") + "/v2/translate"
 
 # Aynı anda en fazla 5 çeviri isteği gitsin (servisler toplu isteği saldırı sanabilir)
 _kapi = asyncio.Semaphore(5)
 
 # Her servisin son hatası. /api/saglik bunu gösterir: canlı sitede sorunu görebilmek için.
-son_hatalar: dict[str, str | None] = {"google": None, "mymemory": None}
+son_hatalar: dict[str, str | None] = {"deepl": None, "google": None, "mymemory": None}
 
 
 async def turkceye_cevir(metin: str | None) -> str | None:
@@ -50,9 +53,9 @@ async def turkceye_cevir(metin: str | None) -> str | None:
     # 2) Veritabanı
     kayitli = _veritabanindan_oku(anahtar)
     if kayitli is None:
-        # 3-4) Çeviri servisleri: önce Google, olmazsa MyMemory
+        # 3-5) Çeviri servisleri sırayla: biri başarısız olursa sonrakine geçilir
         async with _kapi:
-            kayitli = await _google_ile(metin) or await _mymemory_ile(metin)
+            kayitli = await _deepl_ile(metin) or await _google_ile(metin) or await _mymemory_ile(metin)
         if kayitli is None:
             return None
         _veritabanina_yaz(anahtar, kayitli)
@@ -88,6 +91,29 @@ def _veritabanina_yaz(anahtar: str, ceviri: str) -> None:
 # ---------------------------------------------------------------------
 # Çeviri servisleri
 # ---------------------------------------------------------------------
+async def _deepl_ile(metin: str) -> str | None:
+    """DeepL resmi API'si. Anahtar yoksa hiç denenmez."""
+    if not DEEPL_API_KEY:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=20) as istemci:
+            cevap = await istemci.post(
+                DEEPL_URL,
+                headers={"Authorization": f"DeepL-Auth-Key {DEEPL_API_KEY}"},
+                json={"text": [metin], "source_lang": "EN", "target_lang": "TR"},
+            )
+        if cevap.status_code != 200:
+            # 403: anahtar yanlış, 456: aylık kota doldu, 429: çok hızlı istek. (Anahtarı ASLA hataya yazma.)
+            son_hatalar["deepl"] = f"HTTP {cevap.status_code}"
+            return None
+        sonuc = cevap.json()["translations"][0]["text"]
+    except Exception as hata:
+        son_hatalar["deepl"] = type(hata).__name__
+        return None
+    son_hatalar["deepl"] = None
+    return sonuc or None
+
+
 async def _google_ile(metin: str) -> str | None:
     parametreler = {"client": "gtx", "sl": "en", "tl": "tr", "dt": "t", "q": metin}
     try:

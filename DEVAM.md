@@ -102,23 +102,19 @@ Son merge: **PR #16** (`agirlik`). Üzerinde çalışılan dal: `gokharitasi` (m
 
 ## 6. ⏳ Açık konular (sırayla)
 
-### 6.1 Canlı sitede çeviri: İLK YAPILACAK
-**Durum:** Canlı sitede haberler, APOD ve takvim açıklamaları İngilizce görünüyor. Yerelde çeviri çalışıyor.
-- Google çevirisi Render'dan gelen istekleri **engelliyor** (`HTTP 302`). Bu kalıcı, beklenen bir durum.
-- MyMemory (yedek): e-posta ayarı Render'da tanımlı ve çalışıyor (`mymemory_eposta_tanimli: true`), ama 24 Kasım'da **günlük kota doldu** ("YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY"). Kota gece ~03:00'te (TR) sıfırlanıyor.
-- Beklenen: Kota sıfırlanınca çeviriler yapılıp **Neon'a kalıcı kaydedilecek**. Sonra sadece yeni metinler çevrilecek.
+### 6.1 Canlı sitede çeviri: DeepL'e geçildi (dal: `deepl`)
+**Teşhis (25 Kasım):** Google Render'ı engelliyor (`HTTP 302`). MyMemory'nin kotası e-postaya rağmen her gün doluyor: büyük ihtimalle kota Render'ın **paylaşılan IP adresine** göre de uygulanıyor (başka siteler bitiriyor). Beklemek çözüm değil.
 
-**Kontrol:** https://uzay-gunlugu.onrender.com/api/saglik → `ceviri_son_hatalar.mymemory` `null` ise çalışıyor. Ayrıca haberlerde `baslik_tr` dolu mu?
-
-**Hâlâ çalışmıyorsa (Plan B):**
-- **DeepL API Free:** en iyi kalite, ayda 500 bin karakter. Kart doğrulaması istiyor. `ceviri.py`'ye yeni bir servis fonksiyonu eklenip Render'a `DEEPL_API_KEY` girilir.
-- **GitHub Actions ile çeviri:** Cron iş akışı Render dışından çevrilmemiş metinleri çevirip Neon'a yazar.
+**Çözüm:** Kullanıcı **DeepL API Free**'yi seçti. Sıra: DeepL → Google → MyMemory. `config.DEEPL_API_KEY` (`:fx` ile biten anahtar → `api-free.deepl.com`). Hata mesajlarında anahtar asla görünmez (testli). `/api/saglik` → `deepl_anahtar_tanimli`, `ceviri_son_hatalar.deepl`.
+- Yapılacak: kullanıcı DeepL hesabı açıp anahtarı **Render → Environment → `DEEPL_API_KEY`** olarak girecek (anahtarı sohbete yazmasın).
+- Kontrol: `/api/saglik` → `deepl_anahtar_tanimli: true` ve haberler açıldıktan sonra `ceviri_son_hatalar.deepl: null`; `/api/news`'te `baslik_tr` dolu. DeepL hata kodları: 403 anahtar yanlış, 456 aylık kota doldu.
+- Aynı dalda: Spaceflight News bazı başlıkları bozuk gönderiyor ("ProtÃ©gÃ©"); `news.bozuk_karakterleri_onar()` düzeltiyor.
 
 ### 6.2 GitHub cron gecikmesi
 "Hatırlatma kontrolü" 15 dk'da bir çalışmalıydı, ilk gün sadece 1 kez kendiliğinden çalıştı. Birkaç gün izlenecek. Düzensizse: **cron-job.org** (ücretsiz) aynı adresi çağırır: `POST /api/gorevler/hatirlatmalar` + başlık `X-Yonetici-Anahtari`.
 
 ### 6.3 Küçük temizlikler
-- README yol haritasında **Adım 7 ve 8 hâlâ `[ ]`**. İşaretlenmeli, ayrıca README'ye canlı site linki eklenebilir.
+- ✅ README güncellendi (dal: `readme`): bütün bölümler, canlı link, kurulum/test komutları, yol haritası.
 - Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`, `iss-canli`, `iss-yedek-kaynak`, `iss-gor`, `asteroitler`, `pwa`
   ```
   git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor asteroitler pwa
