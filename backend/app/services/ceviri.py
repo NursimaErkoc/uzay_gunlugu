@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 import httpx
 
 from app import cache, db
+from app.config import MYMEMORY_EPOSTA
 
 GOOGLE_URL = "https://translate.googleapis.com/translate_a/single"
 MYMEMORY_URL = "https://api.mymemory.translated.net/get"
@@ -109,10 +110,13 @@ async def _mymemory_ile(metin: str) -> str | None:
     """MyMemory tek seferde en fazla ~500 karakter çeviriyor; uzun metni cümle cümle parçalara bölüyoruz."""
     parcalar = _parcala(metin, 450)
     cevrilenler = []
+    temel = {"langpair": "en|tr"}
+    if MYMEMORY_EPOSTA:
+        temel["de"] = MYMEMORY_EPOSTA   # kota bu adrese bağlansın (günde 50.000 karakter)
     try:
         async with httpx.AsyncClient(timeout=20) as istemci:
             for parca in parcalar:
-                cevap = await istemci.get(MYMEMORY_URL, params={"q": parca, "langpair": "en|tr"})
+                cevap = await istemci.get(MYMEMORY_URL, params={**temel, "q": parca})
                 veri = cevap.json() if cevap.status_code == 200 else {}
                 # MyMemory hata durumunu (ör. günlük kota doldu) cevabın içinde bildiriyor
                 if str(veri.get("responseStatus")) != "200" or veri.get("quotaFinished"):
