@@ -559,6 +559,97 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .kapat:hover { color: var(--yazi); border-color: var(--kenar); }
 
+/* ===== Bu Gece Gökyüzü ===== */
+.konum-karti { padding: 16px 20px; }
+.konum-satiri { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.konum-satiri select {
+  background: var(--kart-ic);
+  color: var(--yazi);
+  border: 1px solid var(--kenar);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font: inherit;
+  color-scheme: dark;
+}
+.konum-satiri .kucuk-buton { padding: 6px 14px; font-size: 0.86rem; }
+.konum-karti .aciklama-notu { margin-top: 10px; }
+
+/* Ay ve Güneş kartları yan yana; dar ekranda alt alta */
+.iki-sutun { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 24px; align-items: start; }
+
+.ay-ust { display: flex; align-items: center; gap: 20px; margin: 18px 0 8px; }
+.ay-cizimi { width: 112px; height: 112px; flex: none; filter: drop-shadow(0 0 18px rgba(240, 236, 220, 0.18)); }
+.buyuk-deger { margin: 0; font-size: 1.3rem; font-weight: 600; line-height: 1.3; }
+.soluk { margin: 2px 0 0; color: var(--soluk-yazi); font-size: 0.88rem; }
+
+/* Etiket - değer tablosu (dl = tanım listesi) */
+.bilgi-tablosu { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 18px 0 0; font-size: 0.92rem; }
+.bilgi-tablosu dt { color: var(--soluk-yazi); }
+.bilgi-tablosu dd { margin: 0; font-variant-numeric: tabular-nums; text-align: right; }
+.bilgi-tablosu small { display: block; color: var(--gri); font-size: 0.78rem; }
+#gunes-icerik .not { margin: 18px 0 0; }
+
+.gozlem-notu {
+  margin: 18px 0 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--vurgu);
+  background: rgba(143, 169, 255, 0.06);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.88rem;
+  color: #c9cfee;
+}
+
+/* Gezegen renkleri: ikon ve gece çubuğu bu renkte */
+.gezegen-satiri { --gezegen-rengi: var(--vurgu); padding: 14px 0; border-top: 1px solid var(--kenar); }
+.gezegen-merkur { --gezegen-rengi: #b8b4c8; }
+.gezegen-venus { --gezegen-rengi: #f5e3b0; }
+.gezegen-mars { --gezegen-rengi: #ff8a6b; }
+.gezegen-jupiter { --gezegen-rengi: #e8c59a; }
+.gezegen-saturn { --gezegen-rengi: #f3c86f; }
+.gezegen-satiri.gorunmuyor { opacity: 0.5; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.gezegen-satiri.gorunmuyor .soluk { margin: 0; }
+.gezegen-adi { display: flex; align-items: center; gap: 10px; font-size: 1rem; }
+.gezegen-adi .ikon { color: var(--gezegen-rengi); width: 1.4em; height: 1.4em; }
+.gezegen-adi strong { font-weight: 600; }
+.gezegen-ayrinti { margin: 6px 0 0; font-size: 0.9rem; color: #c9cfee; }
+
+/* Gece çizelgesi: sol uç gün batımı, sağ uç gün doğumu */
+.cizelge-ust { margin-bottom: 6px; }
+.cizelge-uclar { display: flex; justify-content: space-between; color: var(--soluk-yazi); font-size: 0.78rem; }
+.cizelge-uclar .ikon { color: var(--sari); }
+.cizelge-saatler { position: relative; height: 18px; margin-top: 4px; }
+.cizelge-saatler span {
+  position: absolute;
+  transform: translateX(-50%);
+  color: var(--gri);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+.gece-cubugu {
+  position: relative;
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 999px;
+  /* Kenarlarda alacakaranlık (hafif mavi), ortada koyu gece */
+  background: linear-gradient(90deg, rgba(124, 150, 255, 0.28), rgba(20, 26, 56, 0.9) 18%, rgba(20, 26, 56, 0.9) 82%, rgba(124, 150, 255, 0.28));
+}
+.gorunur-aralik {
+  position: absolute;
+  top: 0; bottom: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gezegen-rengi) 55%, transparent);
+}
+.en-iyi-nokta {
+  position: absolute;
+  top: 50%;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--gezegen-rengi);
+  box-shadow: 0 0 10px var(--gezegen-rengi);
+}
+#gezegen-karti .aciklama-notu { margin-top: 14px; }
+
 /* ===== Yükleniyor / hata ===== */
 .yukleniyor, .hata {
   display: flex;

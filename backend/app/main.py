@@ -19,9 +19,9 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from app import db, mailer
+from app import cache, db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import ceviri, events, facts, nasa, news, reminders
+from app.services import ceviri, events, facts, gokyuzu, nasa, news, reminders
 
 
 # ---------------------------------------------------------------------
@@ -132,6 +132,24 @@ async def ayin_olaylari(
     if not 1900 <= yil <= 2100:
         raise HTTPException(status_code=422, detail="Yıl 1900-2100 arasında olmalı")
     return await events.ayin_olaylari(yil, ay_no)
+
+
+@app.get("/api/gece", tags=["Gökyüzü"])
+def bu_gece_gokyuzu(
+    enlem: float = Query(default=39.93, ge=-90, le=90, description="Enlem (Ankara: 39.93)"),
+    boylam: float = Query(default=32.86, ge=-180, le=180, description="Boylam (Ankara: 32.86)"),
+):
+    """Bu gecenin gökyüzü: Ay evresi, gün batımı/doğumu, görünen gezegenler."""
+    # Gizlilik ve önbellek için konumu 1 ondalığa yuvarlıyoruz (~10 km). Bu hassasiyet
+    # hesaplar için yeterli (saatler en fazla birkaç saniye değişir) ve kimsenin tam
+    # konumu sunucuda kalmaz. Aynı bölgeden gelen istekler de aynı önbelleği kullanır.
+    enlem, boylam = round(enlem, 1), round(boylam, 1)
+    anahtar = f"gece:{enlem}:{boylam}"
+    sonuc = cache.getir(anahtar)
+    if sonuc is None:
+        sonuc = gokyuzu.bu_gece(enlem, boylam)
+        cache.kaydet(anahtar, sonuc, 10 * 60)   # 10 dakika
+    return sonuc
 
 
 # ---------------------------------------------------------------------
