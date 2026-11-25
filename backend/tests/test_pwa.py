@@ -8,7 +8,8 @@ import pytest
 
 from app.config import PROJE_KLASORU
 
-SAYFALAR = ["index.html", "gokyuzu.html", "iss.html", "dunya.html", "asteroitler.html", "events.html"]
+# Menüsü olan bütün sayfalar (yeni sayfa eklenince kendiliğinden listeye girer)
+SAYFALAR = sorted(p.name for p in (PROJE_KLASORU / "frontend").glob("*.html") if p.name != "cevrimdisi.html")
 
 
 def test_manifest_gecerli_ve_ikonlar_var(istemci):

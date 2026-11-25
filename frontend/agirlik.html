@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gezegenlerde Ağırlığın · Uzay Günlüğü</title>
+  <meta name="theme-color" content="#010208">
+  <!-- Uygulama (PWA): kimlik kartı ve ikonlar -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="ikonlar/ikon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="ikonlar/ikon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=10">
+</head>
+<body>
+  <header class="ust">
+    <h1>Uzay Günlüğü</h1>
+    <p class="alt-baslik">Başka dünyalarda tartıya çıksaydın</p>
+    <nav class="menu">
+      <a href="index.html"><span data-ikon="fotograf"></span>Günlük</a>
+      <details class="menu-grup">
+        <summary class="aktif"><span data-ikon="pusula"></span>Keşfet<span data-ikon="asagi" class="menu-ok"></span></summary>
+        <div class="menu-acilir">
+          <a href="gokyuzu.html"><span data-ikon="hilal"></span>Bu Gece</a>
+          <a href="iss.html"><span data-ikon="iss"></span>ISS</a>
+          <a href="dunya.html"><span data-ikon="dunya"></span>Dünya</a>
+          <a href="asteroitler.html"><span data-ikon="asteroit"></span>Asteroitler</a>
+          <a href="agirlik.html" class="aktif" aria-current="page"><span data-ikon="terazi"></span>Ağırlık</a>
+        </div>
+      </details>
+      <a href="events.html"><span data-ikon="takvim"></span>Uzay Takvimi</a>
+    </nav>
+  </header>
+
+  <main class="icerik">
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="terazi"></span>Gezegenlerde Ağırlığın</h2>
+        <label class="tarih-secici agirlik-girisi">
+          <span>Dünya'daki ağırlığın</span>
+          <input type="number" id="agirlik" min="1" max="1000" step="0.1" value="50" inputmode="decimal">
+          <span>kg</span>
+        </label>
+      </div>
+
+      <div id="cisimler" class="cisim-izgara" aria-live="polite"></div>
+      <p class="soluk kucuk-not">Zıplama: Dünya'da 50 cm zıpladığını varsayıyoruz. Düşüş: elinden 1 metre yükseklikten bıraktığın bir top.</p>
+    </section>
+
+    <section class="kart">
+      <h2 class="bolum-basligi"><span data-ikon="bilgi"></span>Neden Farklı?</h2>
+      <div class="aciklama-metni">
+        <p><strong>Kütlen</strong> her yerde aynıdır: vücudundaki madde gezegen değiştirince azalıp çoğalmaz.
+          Değişen, bulunduğun gök cisminin seni ne kadar güçlü çektiğidir. Buna <strong>yüzey çekimi</strong> denir.
+          Tartı aslında bu çekimi ölçer; bu yüzden Ay'da tartıya çıksan çok daha düşük bir sayı görürdün.</p>
+        <p>Çekim iki şeye bağlıdır: gök cisminin <strong>kütlesine</strong> (büyük kütle daha güçlü çeker) ve
+          <strong>merkezine olan uzaklığına</strong> (uzaklaştıkça zayıflar). Satürn Dünya'dan 95 kat daha ağırdır ama o kadar
+          büyüktür ki yüzeyinde merkezinden çok uzakta kalırsın; sonuçta çekimi Dünya'nınkine çok yakındır.</p>
+        <p>Jüpiter, Satürn, Uranüs, Neptün ve Güneş'te <strong>üzerinde durulacak bir yüzey yoktur</strong>. Oradaki değerler,
+          hava basıncının Dünya'daki deniz seviyesiyle aynı olduğu bulut katmanı için hesaplanır. Bu gezegenler çok hızlı
+          döndüğü için ekvatorda biraz daha hafif hissederdin.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="alt">
+    Gezegen verileri: <a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/" target="_blank" rel="noopener">NASA Gezegen Bilgi Tablosu</a>
+  </footer>
+
+  <script src="ortak.js?v=10"></script>
+  <script src="agirlik.js?v=10"></script>
+</body>
+</html>
