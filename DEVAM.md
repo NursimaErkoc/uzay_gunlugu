@@ -108,6 +108,7 @@ Son merge: **PR #16** (`agirlik`). Üzerinde çalışılan dal: `gokharitasi` (m
 **Çözüm:** Kullanıcı **DeepL API Free**'yi seçti. Sıra: DeepL → Google → MyMemory. `config.DEEPL_API_KEY` (`:fx` ile biten anahtar → `api-free.deepl.com`). Hata mesajlarında anahtar asla görünmez (testli). `/api/saglik` → `deepl_anahtar_tanimli`, `ceviri_son_hatalar.deepl`.
 - Yapılacak: kullanıcı DeepL hesabı açıp anahtarı **Render → Environment → `DEEPL_API_KEY`** olarak girecek (anahtarı sohbete yazmasın).
 - Kontrol: `/api/saglik` → `deepl_anahtar_tanimli: true` ve haberler açıldıktan sonra `ceviri_son_hatalar.deepl: null`; `/api/news`'te `baslik_tr` dolu. DeepL hata kodları: 403 anahtar yanlış, 456 aylık kota doldu.
+- ✅ DeepL canlıda çalışıyor (PR #19). Ama ilk çevirilerde Türkçe harfler bozuk geldi ("TedarikÃ§i"): istek gövdesi charset'siz JSON'du. Düzeltme (dal: `ceviri-harfler`): gövde `ensure_ascii=True` + `charset=utf-8`; `ceviri.bozuk_karakterleri_onar()` her çeviriye VE veritabanından okunan eski kayıtlara uygulanıyor (Neon'daki bozuk kayıtları silmeye gerek yok).
 - Aynı dalda: Spaceflight News bazı başlıkları bozuk gönderiyor ("ProtÃ©gÃ©"); `news.bozuk_karakterleri_onar()` düzeltiyor.
 
 ### 6.2 GitHub cron gecikmesi

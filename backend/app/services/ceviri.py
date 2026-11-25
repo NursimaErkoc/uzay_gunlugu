@@ -17,6 +17,7 @@ gelince ücretsiz servisler bizi engelliyor. Artık her metin ömründe BİR KEZ
 import asyncio
 import hashlib
 import html
+import json
 import re
 from datetime import datetime, timezone
 
@@ -37,6 +38,24 @@ _kapi = asyncio.Semaphore(5)
 son_hatalar: dict[str, str | None] = {"deepl": None, "google": None, "mymemory": None}
 
 
+# UTF-8 metin yanlışlıkla Windows-1252 sanılıp okununca ortaya çıkan karakterler ("é" -> "Ã©")
+_BOZUK_ISARETLER = ("Ã", "Â", "â€")
+
+
+def bozuk_karakterleri_onar(metin: str | None) -> str | None:
+    """
+    Bazen "Protégé" yerine "ProtÃ©gÃ©", "Tedarikçi" yerine "TedarikÃ§i" geliyor ("mojibake" denen bozulma):
+    haber kaynağında ve bir dönem DeepL çevirilerinde oldu. Metni bozulduğu yoldan geri çeviriyoruz.
+    Geri çeviri olmazsa metni olduğu gibi bırakıyoruz.
+    """
+    if not metin or not any(isaret in metin for isaret in _BOZUK_ISARETLER):
+        return metin
+    try:
+        return metin.encode("cp1252").decode("utf-8")
+    except UnicodeError:
+        return metin
+
+
 async def turkceye_cevir(metin: str | None) -> str | None:
     """Metni İngilizceden Türkçeye çevirir. Başarısız olursa None döner."""
     if not metin:
@@ -51,11 +70,14 @@ async def turkceye_cevir(metin: str | None) -> str | None:
         return kayitli
 
     # 2) Veritabanı
-    kayitli = _veritabanindan_oku(anahtar)
+    kayitli = bozuk_karakterleri_onar(_veritabanindan_oku(anahtar))   # eski bozuk kayıtlar da düzelsin
     if kayitli is None:
         # 3-5) Çeviri servisleri sırayla: biri başarısız olursa sonrakine geçilir
         async with _kapi:
             kayitli = await _deepl_ile(metin) or await _google_ile(metin) or await _mymemory_ile(metin)
+        if kayitli is None:
+            return None
+        kayitli = bozuk_karakterleri_onar(kayitli)
         if kayitli is None:
             return None
         _veritabanina_yaz(anahtar, kayitli)
@@ -97,10 +119,14 @@ async def _deepl_ile(metin: str) -> str | None:
         return None
     try:
         async with httpx.AsyncClient(timeout=20) as istemci:
+            # ensure_ascii: özel karakterler é gibi yazılır, istek tamamen İngilizce harflerden oluşur.
+            # Böylece karşı taraf harf kodlamasını yanlış tahmin edemez (önceden "ç" -> "Ã§" oluyordu).
+            govde = json.dumps({"text": [metin], "source_lang": "EN", "target_lang": "TR"}, ensure_ascii=True)
             cevap = await istemci.post(
                 DEEPL_URL,
-                headers={"Authorization": f"DeepL-Auth-Key {DEEPL_API_KEY}"},
-                json={"text": [metin], "source_lang": "EN", "target_lang": "TR"},
+                headers={"Authorization": f"DeepL-Auth-Key {DEEPL_API_KEY}",
+                         "Content-Type": "application/json; charset=utf-8"},
+                content=govde.encode("ascii"),
             )
         if cevap.status_code != 200:
             # 403: anahtar yanlış, 456: aylık kota doldu, 429: çok hızlı istek. (Anahtarı ASLA hataya yazma.)
