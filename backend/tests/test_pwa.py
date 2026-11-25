@@ -8,7 +8,7 @@ import pytest
 
 from app.config import PROJE_KLASORU
 
-SAYFALAR = ["index.html", "gokyuzu.html", "iss.html", "asteroitler.html", "events.html"]
+SAYFALAR = ["index.html", "gokyuzu.html", "iss.html", "dunya.html", "asteroitler.html", "events.html"]
 
 
 def test_manifest_gecerli_ve_ikonlar_var(istemci):

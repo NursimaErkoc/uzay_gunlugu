@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from app import cache, db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import ceviri, events, facts, gokyuzu, iss, nasa, neo, news, reminders
+from app.services import ceviri, epic, events, facts, gokyuzu, iss, nasa, neo, news, reminders
 
 
 # ---------------------------------------------------------------------
@@ -179,6 +179,23 @@ async def iss_gecisleri(
             raise HTTPException(status_code=502, detail=str(hata))
         cache.kaydet(anahtar, sonuc, 60 * 60)   # 1 saat (geçmişte kalan geçişler tarayıcıda ayıklanıyor)
     return sonuc
+
+
+@app.get("/api/dunya", tags=["NASA"])
+async def dunya(
+    tarih: date | None = Query(
+        default=None,
+        description="Hangi gün? (YYYY-AA-GG) Boş bırakırsan en son yayınlanan gün.",
+        examples=["2026-11-23"],
+    ),
+):
+    """Dünya'nın bir günde çekilmiş tam fotoğrafları (NASA EPIC, 1,5 milyon km'den)."""
+    if tarih and not date(2015, 6, 13) <= tarih <= date.today():
+        raise HTTPException(status_code=422, detail="Tarih 13 Haziran 2015 ile bugün arasında olmalı")
+    try:
+        return await epic.dunya_fotograflari(tarih.isoformat() if tarih else None)
+    except epic.EpicHatasi as hata:
+        raise HTTPException(status_code=502, detail=str(hata))
 
 
 @app.get("/api/asteroitler", tags=["NASA"])

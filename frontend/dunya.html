@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dünya'nın Fotoğrafı · Uzay Günlüğü</title>
+  <meta name="theme-color" content="#010208">
+  <!-- Uygulama (PWA): kimlik kartı ve ikonlar -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="ikonlar/ikon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="ikonlar/ikon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=8">
+</head>
+<body>
+  <header class="ust">
+    <h1>Uzay Günlüğü</h1>
+    <p class="alt-baslik">1,5 milyon km uzaktan Dünya</p>
+    <nav class="menu">
+      <a href="index.html"><span data-ikon="fotograf"></span>Günlük</a>
+      <a href="gokyuzu.html"><span data-ikon="hilal"></span>Bu Gece</a>
+      <a href="iss.html"><span data-ikon="iss"></span>ISS</a>
+      <a href="dunya.html" class="aktif"><span data-ikon="dunya"></span>Dünya</a>
+      <a href="asteroitler.html"><span data-ikon="asteroit"></span>Asteroitler</a>
+      <a href="events.html"><span data-ikon="takvim"></span>Uzay Takvimi</a>
+    </nav>
+  </header>
+
+  <main class="icerik">
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="dunya"></span>Dünya'nın Fotoğrafı</h2>
+        <label class="tarih-secici">
+          <span>Tarih</span>
+          <input type="date" id="tarih" min="2015-06-13">
+        </label>
+      </div>
+
+      <div class="dunya-oynatici">
+        <div class="dunya-cerceve">
+          <canvas id="dunya-tuvali" role="img" aria-label="Dünya'nın dönüşü"></canvas>
+          <div id="dunya-durum" class="dunya-durum"></div>
+        </div>
+
+        <div class="dunya-kontrol">
+          <button id="oynat" class="ok-butonu" aria-label="Oynat"></button>
+          <input type="range" id="zaman-cubugu" min="0" max="0" step="0.01" value="0" aria-label="Zaman">
+          <button id="hiz" class="kucuk-buton" aria-label="Oynatma hızı">1x</button>
+        </div>
+
+        <div id="kare-bilgisi" class="deger-izgara"></div>
+      </div>
+
+      <div id="onizlemeler" class="onizlemeler" aria-label="Günün fotoğrafları"></div>
+    </section>
+
+    <section class="kart">
+      <h2 class="bolum-basligi"><span data-ikon="bilgi"></span>Bu Fotoğraflar Nereden Geliyor?</h2>
+      <div class="aciklama-metni">
+        <p><strong>DSCOVR</strong> uydusu, Dünya ile Güneş arasında, Dünya'dan yaklaşık <strong>1,5 milyon km</strong>
+          uzakta duruyor (Ay'dan ~4 kat uzak). Orası "L1 noktası": Dünya'nın ve Güneş'in çekim kuvvetleri
+          dengelendiği için uydu Dünya ile birlikte Güneş'in etrafında döner ve hep aynı yerde kalır.</p>
+        <p>Uydu hep Güneş'e dönük tarafa baktığı için Dünya'yı <strong>her zaman tamamen aydınlık</strong> görür;
+          üzerindeki <strong>EPIC</strong> kamerası günde 10-20 kez fotoğraf çeker. Art arda oynatınca Dünya'nın bir gün
+          boyunca kendi etrafında dönüşünü izleyebilirsin.</p>
+        <p>Fotoğraflar işlenip yayınlanana kadar <strong>1-2 gün</strong> geçer; bu yüzden "bugün" seçilse bile en son
+          yayınlanan gün gösterilir.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="alt">
+    Fotoğraflar: <a href="https://epic.gsfc.nasa.gov" target="_blank" rel="noopener">NASA EPIC</a> · NOAA DSCOVR
+  </footer>
+
+  <script src="ortak.js?v=8"></script>
+  <script src="dunya.js?v=8"></script>
+</body>
+</html>
