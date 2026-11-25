@@ -37,7 +37,7 @@ def test_hatali_haber_adedi_reddedilir(istemci):
 
 
 def test_frontend_sayfalari_sunuluyor(istemci):
-    for sayfa in ["/", "/events.html", "/style.css", "/app.js", "/events.js"]:
+    for sayfa in ["/", "/events.html", "/style.css", "/app.js", "/events.js", "/gokyuzu.html", "/gokyuzu.js"]:
         assert istemci.get(sayfa).status_code == 200, sayfa
 
 
