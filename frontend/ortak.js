@@ -56,6 +56,7 @@ const IKONLAR = {
   asagi: '<path d="m6 9 6 6 6-6"/>',
   takimyildiz: '<circle cx="5" cy="18" r="1.6"/><circle cx="10" cy="8" r="1.6"/><circle cx="17" cy="11" r="1.6"/><circle cx="20" cy="4" r="1.2"/><path d="M5.8 16.6 9.2 9.4M11.5 8.6l4 1.8M17.8 9.6l1.6-4"/>',
   terazi: '<path d="M12 3v18M8 21h8M4 7h16"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/>',
+  pasta: '<path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20M7 8v3M12 8v3M17 8v3"/><path d="M7 4h.01M12 4h.01M17 4h.01"/>',
 };
 
 /** ikon("roket") -> <svg ...>...</svg>   Bilinmeyen ad gelirse zil ikonu. */
@@ -216,6 +217,53 @@ function yukleniyorHtml(metin, altMetin = "") {
 function hataHtml(metin, ayrinti = "") {
   return `<div class="hata">${ikon("uyari")}<span>${metin}</span>
     ${ayrinti ? `<small>${metinTemizle(ayrinti)}</small>` : ""}</div>`;
+}
+
+// NASA'nın Günün Fotoğrafı (APOD) kartı
+// APOD verisini HTML'e dönüştürür. Ana sayfa ve Doğum Günü sayfası birlikte kullanır.
+function apodHtml(veri) {
+  const kaynak = metinTemizle(veri.kaynak);
+  let medya;
+  if (veri.tur === "image") {
+    // Resme tıklayınca yüksek çözünürlüklü hali yeni sekmede açılsın
+    medya = `
+      <a href="${metinTemizle(veri.hd_url)}" target="_blank" rel="noopener">
+        <img src="${metinTemizle(veri.url)}" alt="${metinTemizle(veri.baslik)}" loading="lazy">
+      </a>`;
+  } else {
+    // Video vb. günlerde NASA sayfasına yönlendir
+    medya = `<div class="not">${ikon("oynat")}<span>Bugünkü içerik bir video veya animasyon.
+      <a href="${kaynak}" target="_blank" rel="noopener">NASA'da izle</a></span></div>`;
+  }
+
+  const telif = veri.telif ? `<span>· © ${metinTemizle(veri.telif)}</span>` : "";
+
+  // Türkçe çeviri varsa üstte Türkçe, altta İngilizce orijinal. Yoksa sadece İngilizce.
+  const turkceVar = Boolean(veri.aciklama_tr);
+  const baslik = turkceVar ? veri.baslik_tr || veri.baslik : veri.baslik;
+
+  const turkceBolum = turkceVar ? `<p class="apod-aciklama">${metinTemizle(veri.aciklama_tr)}</p>` : "";
+  const ingilizceBolum = `
+    <div class="${turkceVar ? "orijinal" : ""}">
+      ${turkceVar ? `<h4 class="orijinal-baslik">Orijinal metin<span>${metinTemizle(veri.baslik)}</span></h4>` : ""}
+      <p class="apod-aciklama">${metinTemizle(veri.aciklama ?? "")}</p>
+    </div>`;
+
+  return `
+    <div class="medya">${medya}</div>
+    <h3 class="apod-baslik">${metinTemizle(baslik)}</h3>
+    <p class="apod-bilgi">${ikon("takvim")}<span>${tarihYaz(veri.tarih)}</span>${telif}</p>
+    ${turkceBolum}
+    ${ingilizceBolum}
+    <a class="devam-linki" href="${kaynak}" target="_blank" rel="noopener">NASA'da görüntüle ${ikon("ok")}</a>
+  `;
+}
+
+// "2024-04-08" -> "8 Nisan 2024"
+function tarihYaz(isoTarih) {
+  return new Date(isoTarih + "T12:00:00").toLocaleDateString("tr-TR", {
+    day: "numeric", month: "long", year: "numeric",
+  });
 }
 
 // ---------------------------------------------------------------------

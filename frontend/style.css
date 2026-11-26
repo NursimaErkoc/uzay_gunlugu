@@ -1054,3 +1054,13 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 480px) {
   .gok-cerceve { margin: 0 -14px; }   /* telefonda harita kartın kenarlarına kadar uzansın */
 }
+
+/* ===== Doğum Günü Fotoğrafın ===== */
+.dogum-yil-secici { margin-bottom: 16px; }
+.ok-butonu:disabled { opacity: 0.35; cursor: default; }
+.dogum-bos { margin: 8px 0 0; }
+.dogum-zaman {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0 0 12px; color: var(--soluk-yazi); font-size: 0.85rem;
+}
+.dogum-zaman .ikon { color: var(--vurgu); }

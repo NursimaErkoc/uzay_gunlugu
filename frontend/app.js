@@ -1,7 +1,7 @@
 // =====================================================================
 // Uzay Günlüğü - ana sayfa
 // Görevi: Kendi API'mizden veriyi çekip sayfaya yerleştirmek.
-// ikon(), metinTemizle(), yukleniyorHtml(), hataHtml() -> ortak.js'den geliyor.
+// ikon(), metinTemizle(), yukleniyorHtml(), hataHtml(), apodHtml() -> ortak.js'den geliyor.
 // =====================================================================
 
 // Sayfadaki elemanları bul (DOM = sayfanın JavaScript'teki karşılığı)
@@ -25,56 +25,10 @@ async function apodGetir(tarih) {
     const cevap = await fetch(adres);          // isteği gönder
     const veri = await cevap.json();           // gelen JSON'u JavaScript nesnesine çevir
     if (!cevap.ok) throw new Error(veri.detail || "Bilinmeyen hata");
-    apodGoster(veri);
+    apodKutusu.innerHTML = apodHtml(veri);   // apodHtml() ortak.js'de
   } catch (hata) {
     apodKutusu.innerHTML = hataHtml("Fotoğraf alınamadı.", hata.message);
   }
-}
-
-// Gelen veriyi HTML'e dönüştürüp sayfaya koyan fonksiyon
-function apodGoster(veri) {
-  const kaynak = metinTemizle(veri.kaynak);
-  let medya;
-  if (veri.tur === "image") {
-    // Resme tıklayınca yüksek çözünürlüklü hali yeni sekmede açılsın
-    medya = `
-      <a href="${metinTemizle(veri.hd_url)}" target="_blank" rel="noopener">
-        <img src="${metinTemizle(veri.url)}" alt="${metinTemizle(veri.baslik)}" loading="lazy">
-      </a>`;
-  } else {
-    // Video vb. günlerde NASA sayfasına yönlendir
-    medya = `<div class="not">${ikon("oynat")}<span>Bugünkü içerik bir video veya animasyon.
-      <a href="${kaynak}" target="_blank" rel="noopener">NASA'da izle</a></span></div>`;
-  }
-
-  const telif = veri.telif ? `<span>· © ${metinTemizle(veri.telif)}</span>` : "";
-
-  // Türkçe çeviri varsa üstte Türkçe, altta İngilizce orijinal. Yoksa sadece İngilizce.
-  const turkceVar = Boolean(veri.aciklama_tr);
-  const baslik = turkceVar ? veri.baslik_tr || veri.baslik : veri.baslik;
-
-  const turkceBolum = turkceVar ? `<p class="apod-aciklama">${metinTemizle(veri.aciklama_tr)}</p>` : "";
-  const ingilizceBolum = `
-    <div class="${turkceVar ? "orijinal" : ""}">
-      ${turkceVar ? `<h4 class="orijinal-baslik">Orijinal metin<span>${metinTemizle(veri.baslik)}</span></h4>` : ""}
-      <p class="apod-aciklama">${metinTemizle(veri.aciklama ?? "")}</p>
-    </div>`;
-
-  apodKutusu.innerHTML = `
-    <div class="medya">${medya}</div>
-    <h3 class="apod-baslik">${metinTemizle(baslik)}</h3>
-    <p class="apod-bilgi">${ikon("takvim")}<span>${tarihYaz(veri.tarih)}</span>${telif}</p>
-    ${turkceBolum}
-    ${ingilizceBolum}
-    <a class="devam-linki" href="${kaynak}" target="_blank" rel="noopener">NASA'da görüntüle ${ikon("ok")}</a>
-  `;
-}
-
-// "2024-04-08" -> "8 Nisan 2024"
-function tarihYaz(isoTarih) {
-  return new Date(isoTarih + "T12:00:00").toLocaleDateString("tr-TR", {
-    day: "numeric", month: "long", year: "numeric",
-  });
 }
 
 tarihKutusu.addEventListener("change", () => apodGetir(tarihKutusu.value));

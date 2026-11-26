@@ -22,6 +22,9 @@ from app.services import ceviri
 WP_URL = "https://science.nasa.gov/wp-json/wp/v2/image-article"
 ISTEK_BASLIKLARI = {"User-Agent": "UzayGunlugu/0.1 (ogrenci projesi)"}
 
+# APOD 16 Haziran 1995'te başladı; daha önceki bir gün için NASA'ya boşuna sormayız.
+APOD_BASLANGIC = date(1995, 6, 16)
+
 
 class NasaHatasi(Exception):
     """NASA'dan beklenmeyen bir cevap geldiğinde fırlatılır."""
@@ -36,6 +39,9 @@ async def gunun_fotografi(tarih: str | None = None) -> dict:
     APOD verisini döndürür. tarih verilmezse en son yayınlanan (bugünün) fotoğraf gelir.
     tarih biçimi: "YYYY-AA-GG", örn. "2024-04-08"
     """
+    if tarih and date.fromisoformat(tarih) < APOD_BASLANGIC:
+        raise ApodBulunamadi(f"APOD 16 Haziran 1995'te başladı, {tarih} tarihinde fotoğraf yok")
+
     onbellek_anahtari = f"apod:{tarih or 'bugun'}"
 
     # 1) Önce önbelleğe bak

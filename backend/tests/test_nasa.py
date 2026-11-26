@@ -52,3 +52,14 @@ def test_gorsel_yoksa_video_sayilir():
     sonuc = nasa._sadelestir(yazi)
     assert sonuc["tur"] == "video"
     assert sonuc["url"] is None
+
+
+def test_apod_baslamadan_onceki_tarih_404(istemci, monkeypatch):
+    """1995'ten önceki bir doğum günü sorulursa NASA'ya hiç gidilmeden 404 dönmeli."""
+    def internete_cikma(*args, **kwargs):
+        raise AssertionError("NASA'ya istek atılmamalıydı")
+    monkeypatch.setattr(nasa.httpx, "AsyncClient", internete_cikma)
+
+    cevap = istemci.get("/api/apod?tarih=1990-05-12")
+    assert cevap.status_code == 404
+    assert "1995" in cevap.json()["detail"]

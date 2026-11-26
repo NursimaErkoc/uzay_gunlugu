@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doğum Günü Fotoğrafın · Uzay Günlüğü</title>
+  <meta name="theme-color" content="#010208">
+  <!-- Uygulama (PWA): kimlik kartı ve ikonlar -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="ikonlar/ikon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="ikonlar/ikon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=12">
+</head>
+<body>
+  <header class="ust">
+    <h1>Uzay Günlüğü</h1>
+    <p class="alt-baslik">Doğduğun gün evren neye benziyordu?</p>
+    <nav class="menu">
+      <a href="index.html"><span data-ikon="fotograf"></span>Günlük</a>
+      <details class="menu-grup">
+        <summary class="aktif"><span data-ikon="pusula"></span>Keşfet<span data-ikon="asagi" class="menu-ok"></span></summary>
+        <div class="menu-acilir">
+          <a href="gokyuzu.html"><span data-ikon="hilal"></span>Bu Gece</a>
+          <a href="iss.html"><span data-ikon="iss"></span>ISS</a>
+          <a href="dunya.html"><span data-ikon="dunya"></span>Dünya</a>
+          <a href="asteroitler.html"><span data-ikon="asteroit"></span>Asteroitler</a>
+          <a href="agirlik.html"><span data-ikon="terazi"></span>Ağırlık</a>
+          <a href="gokharitasi.html"><span data-ikon="takimyildiz"></span>Gök Haritası</a>
+          <a href="dogumgunu.html" class="aktif" aria-current="page"><span data-ikon="pasta"></span>Doğum Günü</a>
+        </div>
+      </details>
+      <a href="events.html"><span data-ikon="takvim"></span>Uzay Takvimi</a>
+    </nav>
+  </header>
+
+  <main class="icerik">
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="pasta"></span>Doğum Günü Fotoğrafın</h2>
+        <label class="tarih-secici">
+          <span>Doğum tarihin</span>
+          <input type="date" id="dogum-tarihi" min="1900-01-01">
+        </label>
+      </div>
+
+      <!-- Yıl seçici: ‹ 2003 · 8. yaş günün › -->
+      <div class="ay-secici dogum-yil-secici" id="yil-secici" hidden>
+        <button id="onceki-yil" class="ok-butonu" aria-label="Önceki doğum günü"><span data-ikon="sol"></span></button>
+        <h2 id="yil-basligi">…</h2>
+        <button id="sonraki-yil" class="ok-butonu" aria-label="Sonraki doğum günü"><span data-ikon="sag"></span></button>
+      </div>
+
+      <div id="dogum-not"></div>
+      <div id="dogum-icerik" aria-live="polite">
+        <p class="soluk dogum-bos">Doğum tarihini seç, NASA'nın o gün yayınladığı uzay fotoğrafını görelim.</p>
+      </div>
+    </section>
+
+    <section class="kart">
+      <h2 class="bolum-basligi"><span data-ikon="bilgi"></span>Bu Fotoğraflar Nereden Geliyor?</h2>
+      <div class="aciklama-metni">
+        <p>NASA, <strong>16 Haziran 1995</strong>'ten beri her gün bir uzay fotoğrafı yayınlıyor:
+          <strong>Günün Astronomi Fotoğrafı</strong> (APOD). Her fotoğrafın altında bir gökbilimcinin yazdığı kısa bir açıklama var.
+          Bugüne kadar 11.000'den fazla gün birikti ve hiçbiri tekrar etmiyor.</p>
+        <p>1995'ten önce doğduysan endişelenme: APOD'un başladığı yıldan bu yana her doğum gününün bir fotoğrafı var.
+          Oklarla yıllar arasında gezinip her yaş gününde evrenin sana neyi gösterdiğine bakabilirsin.</p>
+        <p class="soluk">Doğum tarihin sadece senin tarayıcında saklanır, sunucuya kaydedilmez.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="alt">
+    Fotoğraflar: <a href="https://science.nasa.gov/apod/" target="_blank" rel="noopener">NASA APOD</a>
+  </footer>
+
+  <script src="ortak.js?v=12"></script>
+  <script src="dogumgunu.js?v=12"></script>
+</body>
+</html>
