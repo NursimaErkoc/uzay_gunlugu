@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from app import cache, db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import ceviri, epic, events, facts, gok_haritasi, gokyuzu, iss, nasa, neo, news, reminders
+from app.services import ceviri, epic, events, facts, gok_haritasi, gokyuzu, iss, nasa, neo, news, reminders, uzay_tarihi
 
 
 # ---------------------------------------------------------------------
@@ -104,6 +104,19 @@ async def apod(
 def gunun_bilgisi():
     """Günün uzay bilgisi (her gün farklı)."""
     return facts.gunun_bilgisi()
+
+
+@app.get("/api/uzay-tarihi", tags=["İçerik"])
+def bugun_uzay_tarihinde(
+    tarih: date | None = Query(
+        default=None,
+        description="Hangi günün olayları (YYYY-AA-GG). Boş bırakırsan bugün. "
+                    "Tarayıcı kendi tarihini gönderir: sunucu farklı saat diliminde olabilir.",
+        examples=["2026-07-20"],
+    ),
+):
+    """Bugün uzay tarihinde ne oldu? O gün olay yoksa en yakın günün olayları gelir."""
+    return uzay_tarihi.gunun_olaylari(tarih)
 
 
 @app.get("/api/news", tags=["İçerik"])

@@ -1081,3 +1081,18 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .yas-cubuk span { display: block; height: 100%; border-radius: inherit; background: var(--renk); box-shadow: 0 0 10px -2px var(--renk); }
 .yas-sonraki { margin: 10px 0 0; font-size: 0.86rem; line-height: 1.45; }
 .yas-bugun { color: var(--sari); }
+
+/* ===== Bugün Uzay Tarihinde (ana sayfa) ===== */
+.tarih-listesi { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.tarih-listesi li {
+  display: grid; grid-template-columns: 5.5em 1fr; gap: 16px; align-items: start;
+  padding: 12px 0; border-top: 1px solid var(--kenar);
+}
+.tarih-listesi li:first-child { border-top: 0; padding-top: 0; }
+.tarih-yil {
+  display: flex; flex-direction: column;
+  font-family: var(--baslik-font); font-size: 1.15rem; color: var(--vurgu); line-height: 1.3;
+}
+.tarih-yil small { font-family: inherit; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--soluk-yazi); margin-top: 4px; }
+.tarih-kategori { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soluk-yazi); }
+.tarih-listesi p { margin: 2px 0 0; line-height: 1.55; }
