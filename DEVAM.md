@@ -4,7 +4,7 @@
 >
 > Bu dosyada **hiçbir şifre veya anahtar yok**. Gizli değerler sadece `.env` dosyasında ve Render/GitHub ayarlarında duruyor. GitHub'a gönderilmesi güvenli.
 
-Son güncelleme: 26 Kasım 2026 (2. turun 4 bölümü de yapıldı: Doğum Günü, Yaşın, Uzay Tarihi, Sondalar)
+Son güncelleme: 26 Kasım 2026 (2. turun 4 bölümü canlıda; hatırlatıcı kararı yazıldı)
 
 ---
 
@@ -98,11 +98,11 @@ frontend/            index.html · gokyuzu.html · iss.html · dunya.html · ast
 | Sonra | **PWA**: `manifest.json`, `sw.js` (strateji: önce internet, olmazsa kayıtlı kopya; `/api/iss` ve `/api/reminders` kaydedilmez; kayıt biçimi değişirse sw.js'deki `SURUM` artırılmalı), `cevrimdisi.html`, ikonlar SVG'den Edge ile PNG'ye çevrildi (Pillow yok). **Logo:** ince çizgili hilal + noktalı yörünge + küçük uydu (kullanıcı birçok seçenek arasından seçti, "sonra değiştiririz" dedi; çizgi film tarzı ve renkli dolgulu tasarımları beğenmedi, sade ince çizgi tarzını seviyor; uydu, takımyıldız, hilal ve Satürn öğelerini beğendi). Logo değişirse: `ikonlar/ikon.svg` düzenlenir, sonra 512/192/180 PNG'ler Edge headless `--screenshot` ile yeniden üretilir. `ortak.js`: SW kaydı, "Uygulamayı yükle" düğmesi (beforeinstallprompt), iPhone için "Paylaş → Ana Ekrana Ekle" notu, çevrimdışı şeridi |
 | Sonra | **Dünya'nın Fotoğrafı** (`dunya.html`, `GET /api/dunya?tarih=`, `services/epic.py`): NASA EPIC, anahtarsız. Günün 10-20 fotoğrafı **akıcı** oynatılıyor: `<canvas>` üzerinde requestAnimationFrame ile çapraz geçiş (kullanıcı ilk sürümdeki sıçramalı geçişin gözü yorduğunu söyledi); fotoğraflar bir kez ekran boyutuna küçültülüp hazır tutuluyor, hız düğmesi (1x/2x/0,5x), zaman çubuğu, önizleme şeridi, görünen bölge adı (merkez boylamına göre), Türkiye görünürlüğü (merkeze <70°), tarih seçici. Son gün 3 saat, geçmiş günler 7 gün önbellekte |
 
-Son merge: **PR #23** (`uzay-tarihi`). Üzerinde çalışılan dal: `sondalar` (merge edilince burayı güncelle).
+Son merge: **PR #24** (`sondalar`). Üzerinde çalışılan dal: `devam-notlari` (sadece notlar; merge edilince burayı güncelle).
 
 ## 6. ⏳ Açık konular (sırayla)
 
-### 6.1 Canlı sitede çeviri: DeepL'e geçildi (dal: `deepl`)
+### 6.1 ✅ Canlı sitede çeviri: DeepL ile çözüldü (PR #19, #20)
 **Teşhis (25 Kasım):** Google Render'ı engelliyor (`HTTP 302`). MyMemory'nin kotası e-postaya rağmen her gün doluyor: büyük ihtimalle kota Render'ın **paylaşılan IP adresine** göre de uygulanıyor (başka siteler bitiriyor). Beklemek çözüm değil.
 
 **Çözüm:** Kullanıcı **DeepL API Free**'yi seçti. Sıra: DeepL → Google → MyMemory. `config.DEEPL_API_KEY` (`:fx` ile biten anahtar → `api-free.deepl.com`). Hata mesajlarında anahtar asla görünmez (testli). `/api/saglik` → `deepl_anahtar_tanimli`, `ceviri_son_hatalar.deepl`.
@@ -111,8 +111,12 @@ Son merge: **PR #23** (`uzay-tarihi`). Üzerinde çalışılan dal: `sondalar` (
 - ✅ DeepL canlıda çalışıyor (PR #19). Ama ilk çevirilerde Türkçe harfler bozuk geldi ("TedarikÃ§i"): istek gövdesi charset'siz JSON'du. Düzeltme (dal: `ceviri-harfler`): gövde `ensure_ascii=True` + `charset=utf-8`; `ceviri.bozuk_karakterleri_onar()` her çeviriye VE veritabanından okunan eski kayıtlara uygulanıyor (Neon'daki bozuk kayıtları silmeye gerek yok).
 - Aynı dalda: Spaceflight News bazı başlıkları bozuk gönderiyor ("ProtÃ©gÃ©"); `news.bozuk_karakterleri_onar()` düzeltiyor.
 
-### 6.2 GitHub cron gecikmesi
-"Hatırlatma kontrolü" 15 dk'da bir çalışmalıydı, ilk gün sadece 1 kez kendiliğinden çalıştı. Birkaç gün izlenecek. Düzensizse: **cron-job.org** (ücretsiz) aynı adresi çağırır: `POST /api/gorevler/hatirlatmalar` + başlık `X-Yonetici-Anahtari`.
+### 6.2 Hatırlatıcı: olduğu gibi kalıyor (karar: 26 Kasım 2026)
+- **Kime ait:** Hatırlatıcı sadece site sahibi için. Kurmak için yönetici anahtarı gerekiyor, e-postalar tek adrese (`HATIRLATMA_ALICISI`) gidiyor. Ziyaretçiler kullanamıyor.
+- **Sorun:** GitHub'ın "Hatırlatma kontrolü" (15 dk'da bir olmalı) gerçekte **8-10 saatte bir** çalışıyor (24-26 Kasım'da 7 kez). Bu yüzden "1 saat önce" hatırlatmaları büyük ihtimalle kaçar (`bekleyenleri_gonder` olayı 1 saatten fazla geçmiş hatırlatmaları atlıyor), "1 gün/1 hafta önce" saatlerce gecikebilir.
+- **Karar:** Kullanıcı şimdilik kullanmıyor, kaldırmayı düşündü ama **olduğu gibi kalmasını** istedi. Zararı yok: anahtarla korunuyor, maliyeti yok, zamanlayıcı siteyi ara sıra uyandırıyor.
+- **İleride kullanmak isterse:** **cron-job.org** (ücretsiz) 15 dk'da bir `POST {SITE_ADRESI}/api/gorevler/hatirlatmalar` çağırır, başlık `X-Yonetici-Anahtari` (anahtarı kullanıcı kendisi girer). Kod değişikliği gerekmez.
+- **Kaldırmak isterse:** `mailer.py`, `services/reminders.py`, `main.py`'deki `/api/reminders*` + `/api/gorevler/hatirlatmalar` + zamanlayıcı + yönetici anahtarı, `events.js/html`'deki zil ve "Hatırlatmalarım", `sw.js` satırı, `hatirlatmalar.yml`, `db.py`'deki tablo, testler (`test_reminders`, `test_mailer`, `test_guvenlik`, `test_api`, `test_pwa`, `conftest`), `.env.example`. Sonra Render'dan `RESEND_API_KEY`, `GMAIL_*`, `YONETICI_ANAHTARI`; GitHub'dan `SITE_ADRESI`, `YONETICI_ANAHTARI` secret'ları silinir.
 
 ### 6.3 Küçük temizlikler
 - ✅ README güncellendi (dal: `readme`): bütün bölümler, canlı link, kurulum/test komutları, yol haritası.
@@ -121,6 +125,7 @@ Son merge: **PR #23** (`uzay-tarihi`). Üzerinde çalışılan dal: `sondalar` (
   git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor asteroitler pwa
   git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor asteroitler pwa
   ```
+- 2. turun birleşmiş dalları silinebilir: `git branch -d dogum-gunu yas uzay-tarihi sondalar` ve `git push origin --delete dogum-gunu yas uzay-tarihi sondalar`
 - CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=15` → `?v=16` yapılmalı (test_menu.py hepsinin aynı olduğunu kontrol ediyor).
 - Kullanıcı ileride site adresini değiştirmek isteyebilir: Render'da yeni servis açmak ya da alan adı bağlamak gerekir.
 
@@ -145,7 +150,7 @@ Kullanıcı bu sırayla yapılmasını istedi (25 Kasım 2026):
 10. ~~**Doğum Günü Fotoğrafın**~~ ✅ (PR #21): `dogumgunu.html/js`. Doğum tarihi → o günün APOD'u (`/api/apod?tarih=`). NASA'nın WordPress arşivinde 16 Haziran 1995'ten bugüne her gün var (kontrol edildi). 1995 öncesi doğanlar için APOD başladıktan sonraki ilk doğum günü; ‹ › ile yıllar arasında gezinme; 29 Şubat → artık olmayan yılda 28 Şubat. Backend: `nasa.APOD_BASLANGIC`, daha önceki tarih NASA'ya sorulmadan 404. APOD kartının HTML'i `app.js`'ten `ortak.js`'e taşındı (`apodHtml()`, `tarihYaz()`); ana sayfa da onu kullanıyor. Doğum tarihi sadece localStorage'da. Yeni ikon: `pasta`.
 11. ~~**Gezegenlerde Yaşın**~~ ✅ (PR #22): `yas.html/js`, sadece frontend, Ağırlık sayfasının kart stilini (`.cisim`) kullanıyor. Merkür'den Plüton'a 9 kart: yaş, yılın tamamlanan kısmı (çubuk), sıradaki gezegen doğum günü (uzaksa yıl + o gün Dünya'daki yaş). Dünya için takvimdeki doğum günü kullanılıyor (29 Şubat → 28 Şubat). Hesap tarihleri tam sayı gün numarasına çevirerek yapılıyor (saat dilimi hatası olmasın). Doğum tarihi Doğum Günü sayfasıyla ortak: `ortak.js` → `dogumTarihiOku()/dogumTarihiKaydet()`. Yeni ikon: `kumsaati`.
 12. ~~**Bugün Uzay Tarihinde**~~ ✅ (PR #23): `backend/data/uzay_tarihi.json` elle derlendi (~150 olay; `tarih` "AA-GG", `yil`, `kategori`, `metin`; Türkiye'nin uydu ve astronot tarihi dahil). Vikipedi'nin Türkçe "tarihte bugün" servisi denendi, çoğu günde uzay olayı yok, kullanılmadı. `services/uzay_tarihi.py` + `GET /api/uzay-tarihi?tarih=` (tarayıcı kendi yerel tarihini gönderir, Render UTC). O gün olay yoksa en yakın gün (en fazla 10 gün; testli). Ana sayfada APOD ile haberler arasında kart (`app.js` → `uzayTarihiGetir()`). Kategoriler test_uzay_tarihi.py'deki listede; yeni kategori eklersen oraya da yaz. Yeni olay eklerken tarihi mutlaka kontrol et.
-13. **Uzay Sondaları Nerede** (dal: `sondalar`, yapılıyor): `sondalar.html/js`, `services/sondalar.py`, `GET /api/sondalar`. Kaynak **JPL Horizons** API (anahtarsız): her araç için `QUANTITIES='19,20'` → Güneş'e uzaklık/hız (r, rdot) ve Dünya'ya uzaklık/hız (delta, deldot). 11 araç (Voyager 1-2, Pioneer 10-11 [sessiz, `son_sinyal`], New Horizons, Lucy, Europa Clipper, Juice, Psyche, JWST, Parker). ⚠️ Horizons aynı anda gelen isteklere **503** veriyor: istekler **sırayla** (Semaphore(1)) ve 503/429'da 3 deneme. Saat başına yuvarlanır, 1 saat disk önbelleği (eksik varsa 5 dk). Tarayıcı km sayacını `uzaklık + hız × geçen süre` ile her saniye ilerletir. Logaritmik çizelge (Güneş'e uzaklık, gezegen yörüngeleri dikey çizgi) asteroit çizelgesinin CSS'ini kullanıyor. Juno ve BepiColombo bilerek eklenmedi (2026'daki görev durumları belirsiz). Menüde Asteroitler'in yanında.
+13. ~~**Uzay Sondaları Nerede**~~ ✅ (PR #24): `sondalar.html/js`, `services/sondalar.py`, `GET /api/sondalar`. Kaynak **JPL Horizons** API (anahtarsız): her araç için `QUANTITIES='19,20'` → Güneş'e uzaklık/hız (r, rdot) ve Dünya'ya uzaklık/hız (delta, deldot). 11 araç (Voyager 1-2, Pioneer 10-11 [sessiz, `son_sinyal`], New Horizons, Lucy, Europa Clipper, Juice, Psyche, JWST, Parker). ⚠️ Horizons aynı anda gelen isteklere **503** veriyor: istekler **sırayla** (Semaphore(1)) ve 503/429'da 3 deneme. Saat başına yuvarlanır, 1 saat disk önbelleği (eksik varsa 5 dk). Tarayıcı km sayacını `uzaklık + hız × geçen süre` ile her saniye ilerletir. Logaritmik çizelge (Güneş'e uzaklık, gezegen yörüngeleri dikey çizgi) asteroit çizelgesinin CSS'ini kullanıyor. Juno ve BepiColombo bilerek eklenmedi (2026'daki görev durumları belirsiz). Menüde Asteroitler'in yanında.
 
 ✅ **GRUPLU MENÜ** (dal: `menu`): Günlük · **Keşfet ▾** (Bu Gece, ISS, Dünya, Asteroitler) · Uzay Takvimi. `<details class="menu-grup">` ile yapıldı (JS'siz de açılır); ortak.js `menuGruplariniKur()` dışarı tıklayınca/Esc ile kapatır. Ağırlık da gruba eklendi. Gök Haritası da gruba eklendi. Yeni sayfa **bütün sayfalarda** `.menu-acilir` içine eklenmeli; grupta bir sayfa aktifse `<summary class="aktif">` olmalı. `tests/test_menu.py` unutulan sayfayı yakalar.
 
