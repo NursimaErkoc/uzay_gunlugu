@@ -56,6 +56,7 @@ const IKONLAR = {
   asagi: '<path d="m6 9 6 6 6-6"/>',
   takimyildiz: '<circle cx="5" cy="18" r="1.6"/><circle cx="10" cy="8" r="1.6"/><circle cx="17" cy="11" r="1.6"/><circle cx="20" cy="4" r="1.2"/><path d="M5.8 16.6 9.2 9.4M11.5 8.6l4 1.8M17.8 9.6l1.6-4"/>',
   terazi: '<path d="M12 3v18M8 21h8M4 7h16"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/>',
+  kumsaati: '<path d="M5 2h14M5 22h14"/><path d="M7 2v3.5a5 5 0 0 0 2.5 4.3L12 12l2.5-2.2A5 5 0 0 0 17 5.5V2M7 22v-3.5a5 5 0 0 1 2.5-4.3L12 12l2.5 2.2A5 5 0 0 1 17 18.5V22"/>',
   pasta: '<path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20M7 8v3M12 8v3M17 8v3"/><path d="M7 4h.01M12 4h.01M17 4h.01"/>',
 };
 
@@ -264,6 +265,16 @@ function tarihYaz(isoTarih) {
   return new Date(isoTarih + "T12:00:00").toLocaleDateString("tr-TR", {
     day: "numeric", month: "long", year: "numeric",
   });
+}
+
+// Doğum tarihi: Doğum Günü ve Yaşın sayfaları paylaşır (biri girince öbüründe de hazır gelir).
+// Sadece bu tarayıcıda saklanır. Gizli sekmede localStorage çalışmayabilir, o yüzden try/catch.
+const DOGUM_KAYIT_ANAHTARI = "uzay-gunlugu-dogum-tarihi";
+function dogumTarihiOku() {
+  try { return localStorage.getItem(DOGUM_KAYIT_ANAHTARI); } catch { return null; }
+}
+function dogumTarihiKaydet(iso) {
+  try { localStorage.setItem(DOGUM_KAYIT_ANAHTARI, iso); } catch { /* önemli değil */ }
 }
 
 // ---------------------------------------------------------------------

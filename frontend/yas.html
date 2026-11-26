@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gezegenlerde Yaşın · Uzay Günlüğü</title>
+  <meta name="theme-color" content="#010208">
+  <!-- Uygulama (PWA): kimlik kartı ve ikonlar -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="ikonlar/ikon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="ikonlar/ikon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=13">
+</head>
+<body>
+  <header class="ust">
+    <h1>Uzay Günlüğü</h1>
+    <p class="alt-baslik">Başka bir gezegende kaç yaşında olurdun?</p>
+    <nav class="menu">
+      <a href="index.html"><span data-ikon="fotograf"></span>Günlük</a>
+      <details class="menu-grup">
+        <summary class="aktif"><span data-ikon="pusula"></span>Keşfet<span data-ikon="asagi" class="menu-ok"></span></summary>
+        <div class="menu-acilir">
+          <a href="gokyuzu.html"><span data-ikon="hilal"></span>Bu Gece</a>
+          <a href="iss.html"><span data-ikon="iss"></span>ISS</a>
+          <a href="dunya.html"><span data-ikon="dunya"></span>Dünya</a>
+          <a href="asteroitler.html"><span data-ikon="asteroit"></span>Asteroitler</a>
+          <a href="agirlik.html"><span data-ikon="terazi"></span>Ağırlık</a>
+          <a href="yas.html" class="aktif" aria-current="page"><span data-ikon="kumsaati"></span>Yaşın</a>
+          <a href="gokharitasi.html"><span data-ikon="takimyildiz"></span>Gök Haritası</a>
+          <a href="dogumgunu.html"><span data-ikon="pasta"></span>Doğum Günü</a>
+        </div>
+      </details>
+      <a href="events.html"><span data-ikon="takvim"></span>Uzay Takvimi</a>
+    </nav>
+  </header>
+
+  <main class="icerik">
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="kumsaati"></span>Gezegenlerde Yaşın</h2>
+        <label class="tarih-secici">
+          <span>Doğum tarihin</span>
+          <input type="date" id="dogum-tarihi" min="1900-01-01">
+        </label>
+      </div>
+
+      <div id="yas-ozet" class="yas-ozet" hidden></div>
+      <div id="gezegenler" class="cisim-izgara" aria-live="polite">
+        <p class="soluk">Doğum tarihini seç, her gezegende kaç yaşında olduğunu hesaplayalım.</p>
+      </div>
+      <p class="soluk kucuk-not">Çubuk, o gezegendeki şu anki yılının ne kadarının geçtiğini gösterir. Doğum tarihin sadece senin tarayıcında saklanır.</p>
+    </section>
+
+    <section class="kart">
+      <h2 class="bolum-basligi"><span data-ikon="bilgi"></span>Yıl Neden Farklı?</h2>
+      <div class="aciklama-metni">
+        <p>Bir <strong>yıl</strong>, bir gezegenin Güneş'in etrafında bir tam tur atması için geçen süredir.
+          Dünya bu turu 365 günde tamamlar; bu yüzden her 365 günde bir yaşımız bir artar.</p>
+        <p>Güneş'e yakın gezegenler <strong>daha kısa bir yolu daha hızlı</strong> dolaşır. Merkür saniyede 47 km hızla gider ve turunu
+          88 günde bitirir. Uzaktakiler hem çok daha uzun bir yol izler hem de daha yavaş ilerler: Neptün saniyede sadece 5,4 km
+          hızla gider ve bir turu 165 yıl sürer.</p>
+        <p>Bu ilişkiyi 400 yıl önce <strong>Johannes Kepler</strong> buldu: bir gezegen Güneş'ten ne kadar uzaksa yılı o kadar uzundur.
+          Gökbilimciler bugün aynı kuralla başka yıldızların etrafındaki gezegenlerin uzaklığını hesaplıyor.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="alt">
+    Yörünge süreleri: <a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/" target="_blank" rel="noopener">NASA Gezegen Bilgi Tablosu</a>
+  </footer>
+
+  <script src="ortak.js?v=13"></script>
+  <script src="yas.js?v=13"></script>
+</body>
+</html>
