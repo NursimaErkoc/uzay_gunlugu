@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from app import cache, db, mailer
 from app.config import PROJE_KLASORU, YONETICI_ANAHTARI
-from app.services import ceviri, epic, events, facts, gok_haritasi, gokyuzu, iss, nasa, neo, news, reminders, uzay_tarihi
+from app.services import ceviri, epic, events, facts, gok_haritasi, gokyuzu, iss, nasa, neo, news, reminders, sondalar, uzay_tarihi
 
 
 # ---------------------------------------------------------------------
@@ -242,6 +242,15 @@ async def asteroitler():
     try:
         return await neo.yaklasan_asteroitler()
     except neo.AsteroitHatasi as hata:
+        raise HTTPException(status_code=502, detail=str(hata))
+
+
+@app.get("/api/sondalar", tags=["NASA"])
+async def uzay_sondalari():
+    """Voyager, New Horizons, Parker gibi uzay araçlarının şu anki uzaklığı ve hızı (JPL Horizons)."""
+    try:
+        return await sondalar.sondalarin_konumu()
+    except sondalar.SondaHatasi as hata:
         raise HTTPException(status_code=502, detail=str(hata))
 
 

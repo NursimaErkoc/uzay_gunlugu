@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uzay Sondaları Nerede · Uzay Günlüğü</title>
+  <meta name="theme-color" content="#010208">
+  <!-- Uygulama (PWA): kimlik kartı ve ikonlar -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="ikonlar/ikon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="ikonlar/ikon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Michroma&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=15">
+</head>
+<body>
+  <header class="ust">
+    <h1>Uzay Günlüğü</h1>
+    <p class="alt-baslik">İnsanlığın en uzak yolcuları şu an nerede?</p>
+    <nav class="menu">
+      <a href="index.html"><span data-ikon="fotograf"></span>Günlük</a>
+      <details class="menu-grup">
+        <summary class="aktif"><span data-ikon="pusula"></span>Keşfet<span data-ikon="asagi" class="menu-ok"></span></summary>
+        <div class="menu-acilir">
+          <a href="gokyuzu.html"><span data-ikon="hilal"></span>Bu Gece</a>
+          <a href="iss.html"><span data-ikon="iss"></span>ISS</a>
+          <a href="dunya.html"><span data-ikon="dunya"></span>Dünya</a>
+          <a href="asteroitler.html"><span data-ikon="asteroit"></span>Asteroitler</a>
+          <a href="sondalar.html" class="aktif" aria-current="page"><span data-ikon="uydu"></span>Sondalar</a>
+          <a href="agirlik.html"><span data-ikon="terazi"></span>Ağırlık</a>
+          <a href="yas.html"><span data-ikon="kumsaati"></span>Yaşın</a>
+          <a href="gokharitasi.html"><span data-ikon="takimyildiz"></span>Gök Haritası</a>
+          <a href="dogumgunu.html"><span data-ikon="pasta"></span>Doğum Günü</a>
+        </div>
+      </details>
+      <a href="events.html"><span data-ikon="takvim"></span>Uzay Takvimi</a>
+    </nav>
+  </header>
+
+  <main class="icerik">
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="uydu"></span>Uzay Sondaları Nerede?</h2>
+      </div>
+      <div id="sonda-ozet" class="deger-izgara"></div>
+    </section>
+
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="gunes"></span>Güneş'ten Ne Kadar Uzaktalar?</h2>
+      </div>
+      <div class="cizelge-aciklamasi" aria-hidden="true">
+        <span><i class="nokta normal"></i>Haberleşiyor</span>
+        <span><i class="nokta sessiz"></i>Bağlantı kesildi</span>
+        <span>Dikey çizgiler: gezegenlerin yörüngeleri</span>
+      </div>
+      <div id="sonda-cizelgesi" class="uzaklik-cizelgesi"></div>
+      <p class="aciklama-notu">
+        AB (astronomik birim) = Dünya ile Güneş arası uzaklık, yaklaşık 150 milyon km. Eksen logaritmik:
+        her ölçek çizgisi bir öncekinin 10 katı uzaklık. Logaritmik olmasaydı Voyager 1'i gösterebilmek için
+        Dünya'yı Güneş'e yaklaşık 1 milimetre yakına çizmek gerekirdi.
+      </p>
+    </section>
+
+    <section class="kart">
+      <div class="kart-ust">
+        <h2 class="bolum-basligi"><span data-ikon="roket"></span>Araçlar</h2>
+      </div>
+      <div id="sonda-listesi"></div>
+    </section>
+
+    <section class="kart">
+      <h2 class="bolum-basligi"><span data-ikon="bilgi"></span>Bunları Nasıl Biliyoruz?</h2>
+      <div class="aciklama-metni">
+        <p>NASA, uzay araçlarıyla dev çanak antenlerden oluşan <strong>Derin Uzay Ağı</strong> üzerinden haberleşir.
+          Antenler Kaliforniya, İspanya ve Avustralya'da: Dünya dönerken biri hep araçları görür.
+          Gönderilen radyo sinyalinin gidip gelme süresi ve frekansındaki küçük kaymalar, aracın uzaklığını ve hızını
+          santimetre hassasiyetinde ölçmeye yeter.</p>
+        <p>Bu sayfadaki sayılar NASA'nın <strong>JPL Horizons</strong> sisteminden geliyor; görev ekiplerinin araçları
+          yönlendirirken kullandığı yörünge hesaplarının aynısı. Pioneer'larla bağlantı yıllar önce kesildi, ama
+          uzayda yolları değişmediği için nerede olduklarını hâlâ hesaplayabiliyoruz.</p>
+        <p class="soluk">Uzaklık sayacı her saniye aracın hızına göre ilerler. Voyager'ların uzaklığı bazı aylarda
+          azalıyor gibi görünebilir: araç uzaklaşmaya devam eder, ama Dünya Güneş'in etrafında dönerken
+          bir süre ona doğru ilerler.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="alt">
+    Veriler: <a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener">NASA JPL Horizons</a>
+  </footer>
+
+  <script src="ortak.js?v=15"></script>
+  <script src="sondalar.js?v=15"></script>
+</body>
+</html>

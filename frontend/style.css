@@ -1096,3 +1096,29 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tarih-yil small { font-family: inherit; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--soluk-yazi); margin-top: 4px; }
 .tarih-kategori { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soluk-yazi); }
 .tarih-listesi p { margin: 2px 0 0; line-height: 1.55; }
+
+/* ===== Uzay Sondaları ===== */
+.cizelge-aciklamasi .nokta.sessiz { background: var(--gri); }
+.uzaklik-cizelgesi .sonda-izi { stroke: var(--vurgu); stroke-opacity: 0.25; stroke-width: 2; }
+.uzaklik-cizelgesi .sonda-izi.sessiz { stroke: var(--gri); stroke-dasharray: 3 4; }
+.uzaklik-cizelgesi .sonda-noktasi { fill: var(--vurgu); }
+.uzaklik-cizelgesi .sonda-noktasi.aktif { filter: drop-shadow(0 0 5px var(--vurgu)); }
+.uzaklik-cizelgesi .sonda-noktasi.sessiz { fill: var(--gri); }
+
+.sonda-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.sonda {
+  display: flex; flex-direction: column;
+  background: var(--kart-ic); border: 1px solid var(--kenar); border-radius: 14px; padding: 14px 16px;
+}
+.sonda-ust { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sonda-ust h3 { margin: 0; font-size: 1.05rem; font-weight: 600; }
+.sonda.sessiz .etiket { color: var(--gri); }
+.sonda.aktif .etiket { color: var(--vurgu); border-color: var(--vurgu); }
+.sonda-firlatma { margin: 4px 0 0; color: var(--soluk-yazi); font-size: 0.8rem; }
+.sonda-km { margin: 14px 0 2px; font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.sonda-km-alt { margin: 0 0 12px; font-size: 0.8rem; }
+.sonda-degerler { display: flex; gap: 20px; margin: 0; font-size: 0.9rem; }
+.sonda-degerler dt { color: var(--soluk-yazi); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.sonda-degerler dd { margin: 0; font-variant-numeric: tabular-nums; }
+.sonda .cisim-bilgi { margin-top: auto; padding-top: 10px; }
+.sonda-degerler + .cisim-bilgi { margin-top: 12px; }
