@@ -3,11 +3,11 @@
 // Doğum tarihini alır, NASA'nın o gün yayınladığı fotoğrafı (APOD) gösterir.
 // Oklarla başka yılların doğum günlerine geçilebilir.
 // Backend'de yeni bir şey yok: ana sayfanın kullandığı /api/apod?tarih= yeterli.
-// ikon(), metinTemizle(), yukleniyorHtml(), hataHtml(), apodHtml(), tarihYaz() -> ortak.js
+// ikon(), metinTemizle(), yukleniyorHtml(), hataHtml(), apodHtml(), tarihYaz(),
+// dogumTarihiOku(), dogumTarihiKaydet() -> ortak.js
 // =====================================================================
 
 const APOD_BASLANGIC = "1995-06-16";             // APOD'un ilk günü
-const KAYIT_ANAHTARI = "uzay-gunlugu-dogum-tarihi";
 
 const girdi = document.getElementById("dogum-tarihi");
 const yilSecici = document.getElementById("yil-secici");
@@ -80,7 +80,7 @@ function dogumTarihiSecildi(iso) {
   dogum = { yil, ay, gun, iso };
   yillar = fotografliYillar(dogum);
   sira = 0;     // ilk fotoğraflı doğum günü: 1995 sonrası doğanlar için doğdukları gün
-  kaydet(iso);
+  dogumTarihiKaydet(iso);
   goster();
 }
 
@@ -129,16 +129,6 @@ async function goster() {
 }
 
 // ---------------------------------------------------------------------
-// Doğum tarihi tarayıcıda saklanır (gizli sekmede localStorage çalışmayabilir)
-// ---------------------------------------------------------------------
-function kaydet(iso) {
-  try { localStorage.setItem(KAYIT_ANAHTARI, iso); } catch { /* önemli değil */ }
-}
-function kayitliTarih() {
-  try { return localStorage.getItem(KAYIT_ANAHTARI); } catch { return null; }
-}
-
-// ---------------------------------------------------------------------
 // Başlat
 // ---------------------------------------------------------------------
 girdi.max = bugunIso();
@@ -146,7 +136,7 @@ girdi.addEventListener("change", () => girdi.value && dogumTarihiSecildi(girdi.v
 oncekiButon.addEventListener("click", () => { if (sira > 0) { sira--; goster(); } });
 sonrakiButon.addEventListener("click", () => { if (sira < yillar.length - 1) { sira++; goster(); } });
 
-const kayitli = kayitliTarih();
+const kayitli = dogumTarihiOku();
 if (kayitli) {
   girdi.value = kayitli;
   dogumTarihiSecildi(kayitli);
