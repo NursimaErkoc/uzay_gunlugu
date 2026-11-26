@@ -7,14 +7,17 @@ Her gün evrene yeni bir pencere açan, Türkçe bir uzay sitesi. Telefona uygul
 ## Bölümler
 | Sayfa | Ne gösteriyor? |
 |---|---|
-| **Günlük** | NASA'nın günün fotoğrafı, günün uzay bilgisi, güncel uzay haberleri (Türkçe çeviriyle) |
+| **Günlük** | NASA'nın günün fotoğrafı, günün uzay bilgisi, bugün uzay tarihinde ne oldu, güncel uzay haberleri (Türkçe çeviriyle) |
 | **Bu Gece** | Seçilen şehirde Ay'ın evresi, gün batımı/doğumu, bu gece görülebilen gezegenler |
 | **ISS** | Uluslararası Uzay İstasyonu'nun canlı konumu, şehrinin üstünden ne zaman geçeceği, uzaydaki astronotlar |
 | **Dünya** | NASA EPIC uydusunun 1,5 milyon km uzaktan çektiği fotoğraflarla Dünya'nın bir günlük dönüşü |
 | **Asteroitler** | Bu hafta Dünya'nın yakınından geçen asteroitler, gündelik karşılaştırmalarla |
+| **Sondalar** | Voyager, New Horizons, Parker gibi uzay araçlarının şu anki uzaklığı (canlı sayaç) ve onlara mesajın kaç saatte ulaştığı |
 | **Ağırlık** | Gezegenlerde ve Ay'da ne kadar ağır olurdun, ne kadar yükseğe zıplardın |
+| **Yaşın** | Her gezegende kaç yaşında olurdun, bir sonraki gezegen doğum günün ne zaman |
 | **Gök Haritası** | Seçilen şehir ve saatte gökyüzü: yıldızlar, Türkçe adlı takımyıldızlar, Ay ve gezegenler |
-| **Uzay Takvimi** | Bu ayın gökyüzü olayları ve roket fırlatmaları; istenen olaylar için e-posta hatırlatması |
+| **Doğum Günü** | Doğduğun gün (ve her yaş gününde) NASA'nın yayınladığı uzay fotoğrafı |
+| **Uzay Takvimi** | Bu ayın gökyüzü olayları ve roket fırlatmaları; site sahibi için e-posta hatırlatması |
 
 ## Teknolojiler
 - **Backend:** Python + FastAPI
@@ -57,6 +60,7 @@ python -m pytest
 - [x] Adım 8: İnternete yayınlama
 - [x] Adım 9: Yeni bölümler: Bu Gece, ISS, Asteroitler, Dünya, Ağırlık, Gök Haritası
 - [x] Adım 10: Telefona kurulabilen uygulama (PWA) ve gruplu menü
+- [x] Adım 11: Doğum Günü Fotoğrafın, Gezegenlerde Yaşın, Bugün Uzay Tarihinde, Uzay Sondaları
 
 ## Lisanslar ve teşekkür
 Yıldız ve takımyıldız verisi [d3-celestial](https://github.com/ofrohn/d3-celestial) projesinden alınmıştır
