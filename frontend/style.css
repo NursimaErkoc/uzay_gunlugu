@@ -88,6 +88,21 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   background-clip: text;
   color: transparent;
 }
+/* Başlıktaki Ğ: harfin şapkası yerine ince, mavi bir hilal.
+   HTML'de şapkasız G yazılı; hilali buradaki ::before çiziyor.
+   left'teki -0.07em: harften sonraki harf aralığının (0.14em) yarısı, hilal harfin tam ortasına gelsin diye. */
+.hilalli-g { position: relative; }
+.hilalli-g::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 0.07em);
+  top: -0.08em;
+  width: 0.62em;
+  height: 0.28em;
+  transform: translateX(-50%);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 18'%3E%3Cpath d='M2 2 A20 15 0 0 0 38 2 A20 7 0 0 1 2 2 Z' fill='%238fa9ff'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none;
+}
 .alt-baslik {
   margin: 10px 0 0;
   color: var(--soluk-yazi);
