@@ -4,7 +4,7 @@
 >
 > Bu dosyada **hiçbir şifre veya anahtar yok**. Gizli değerler sadece `.env` dosyasında ve Render/GitHub ayarlarında duruyor. GitHub'a gönderilmesi güvenli.
 
-Son güncelleme: 25 Kasım 2026 (Bu Gece Gökyüzü bölümü eklendi)
+Son güncelleme: 26 Kasım 2026 (Doğum Günü Fotoğrafın eklendi, yeni 4 bölümlük plan)
 
 ---
 
@@ -38,7 +38,7 @@ NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberleri
 .venv\Scripts\python -m uvicorn app.main:app --reload --app-dir backend
 #   -> http://127.0.0.1:8000  (site)   http://127.0.0.1:8000/docs  (API)
 
-# Testler (şu an 149 test, hepsi geçiyor)
+# Testler (şu an 188 test, hepsi geçiyor)
 .venv\Scripts\python -m pytest -v
 
 # Paketler
@@ -64,8 +64,8 @@ backend/app/
   cache.py           hafıza + disk önbellek  mailer.py  Resend API (canlı) / Gmail SMTP (yerel)
   services/          nasa.py · facts.py · news.py · events.py · gokyuzu.py · iss.py · neo.py · epic.py · ceviri.py · reminders.py
 backend/data/        facts.json (64 bilgi) · meteor_showers.json
-backend/tests/       175 test (pytest)
-frontend/            index.html · gokyuzu.html · iss.html · dunya.html · asteroitler.html · agirlik.html · gokharitasi.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · dunya.js · asteroitler.js · agirlik.js · gokharitasi.js · events.js · veri/gok.json (yıldız verisi; `araclar/gok_verisi_hazirla.py` üretir)
+backend/tests/       188 test (pytest)
+frontend/            index.html · gokyuzu.html · iss.html · dunya.html · asteroitler.html · agirlik.html · gokharitasi.html · dogumgunu.html · events.html · style.css · ortak.js (ikonlar + yıldızlar) · app.js · gokyuzu.js · iss.js · dunya.js · asteroitler.js · agirlik.js · gokharitasi.js · dogumgunu.js · events.js · veri/gok.json (yıldız verisi; `araclar/gok_verisi_hazirla.py` üretir)
                      manifest.json · sw.js (service worker) · cevrimdisi.html · ikonlar/ (svg + 180/192/512 png)
 .github/workflows/   testler.yml · hatirlatmalar.yml (cron)
 ```
@@ -98,7 +98,7 @@ frontend/            index.html · gokyuzu.html · iss.html · dunya.html · ast
 | Sonra | **PWA**: `manifest.json`, `sw.js` (strateji: önce internet, olmazsa kayıtlı kopya; `/api/iss` ve `/api/reminders` kaydedilmez; kayıt biçimi değişirse sw.js'deki `SURUM` artırılmalı), `cevrimdisi.html`, ikonlar SVG'den Edge ile PNG'ye çevrildi (Pillow yok). **Logo:** ince çizgili hilal + noktalı yörünge + küçük uydu (kullanıcı birçok seçenek arasından seçti, "sonra değiştiririz" dedi; çizgi film tarzı ve renkli dolgulu tasarımları beğenmedi, sade ince çizgi tarzını seviyor; uydu, takımyıldız, hilal ve Satürn öğelerini beğendi). Logo değişirse: `ikonlar/ikon.svg` düzenlenir, sonra 512/192/180 PNG'ler Edge headless `--screenshot` ile yeniden üretilir. `ortak.js`: SW kaydı, "Uygulamayı yükle" düğmesi (beforeinstallprompt), iPhone için "Paylaş → Ana Ekrana Ekle" notu, çevrimdışı şeridi |
 | Sonra | **Dünya'nın Fotoğrafı** (`dunya.html`, `GET /api/dunya?tarih=`, `services/epic.py`): NASA EPIC, anahtarsız. Günün 10-20 fotoğrafı **akıcı** oynatılıyor: `<canvas>` üzerinde requestAnimationFrame ile çapraz geçiş (kullanıcı ilk sürümdeki sıçramalı geçişin gözü yorduğunu söyledi); fotoğraflar bir kez ekran boyutuna küçültülüp hazır tutuluyor, hız düğmesi (1x/2x/0,5x), zaman çubuğu, önizleme şeridi, görünen bölge adı (merkez boylamına göre), Türkiye görünürlüğü (merkeze <70°), tarih seçici. Son gün 3 saat, geçmiş günler 7 gün önbellekte |
 
-Son merge: **PR #16** (`agirlik`). Üzerinde çalışılan dal: `gokharitasi` (merge edilince burayı güncelle).
+Son merge: **PR #20** (`ceviri-harfler`). Üzerinde çalışılan dal: `dogum-gunu` (merge edilince burayı güncelle).
 
 ## 6. ⏳ Açık konular (sırayla)
 
@@ -116,12 +116,12 @@ Son merge: **PR #16** (`agirlik`). Üzerinde çalışılan dal: `gokharitasi` (m
 
 ### 6.3 Küçük temizlikler
 - ✅ README güncellendi (dal: `readme`): bütün bölümler, canlı link, kurulum/test komutları, yol haritası.
-- Birleşmiş eski dallar silinebilir: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`, `iss-canli`, `iss-yedek-kaynak`, `iss-gor`, `asteroitler`, `pwa`
+- ✅ Birleşmiş eski dallar silindi (26 Kasım'da sadece `main` var). Eski not: `testler`, `yayin`, `eposta-api`, `gorunum`, `ceviri-duzeltme`, `gorunum-ceviri`, `ceviri-teshis`, `bu-gece`, `iss-canli`, `iss-yedek-kaynak`, `iss-gor`, `asteroitler`, `pwa`
   ```
   git branch -d testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor asteroitler pwa
   git push origin --delete testler yayin eposta-api gorunum ceviri-duzeltme gorunum-ceviri ceviri-teshis bu-gece iss-canli iss-yedek-kaynak iss-gor asteroitler pwa
   ```
-- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=11` → `?v=12` yapılmalı (test_menu.py hepsinin aynı olduğunu kontrol ediyor).
+- CSS/JS'te büyük değişiklik yapınca tüm `.html` dosyalarındaki `?v=12` → `?v=13` yapılmalı (test_menu.py hepsinin aynı olduğunu kontrol ediyor).
 - Kullanıcı ileride site adresini değiştirmek isteyebilir: Render'da yeni servis açmak ya da alan adı bağlamak gerekir.
 
 ## 7. 🚀 Sırada: Yeni bölümler
@@ -138,7 +138,14 @@ Kullanıcı bu sırayla yapılmasını istedi (25 Kasım 2026):
 8. ~~**Gezegenlerde Ağırlığın**~~ ✅ (dal: `agirlik`): `agirlik.html/js`, sadece frontend. 11 gök cismi kartı: ağırlık, zıplama (Dünya'da 50 cm varsayımı), 1 m'den düşüş süresi, ilginç bilgi. Girilen kg localStorage'da.
 9. ~~**Gök Haritası**~~ ✅ (dal: `gokharitasi`): yıldızlar d3-celestial (BSD) verisinden `frontend/veri/gok.json` (kadir ≤ 5,5; 2.851 yıldız, 88 takımyıldız, Türkçe adlar). Yıldız konumu tarayıcıda (stereografik izdüşüm, Doğu solda); Güneş/Ay/gezegenler `GET /api/gok-haritasi?enlem&boylam&zaman` (J2000 ra/dec, 10 dk'ya yuvarlanır). Formülün Python kopyası test_gok_haritasi.py'de astronomy-engine ile karşılaştırılıyor. Eski not: Bu gecenin yıldız/takımyıldız haritası (şehre göre).
 
-Önerilip seçilmeyenler: Uzay Havası (NOAA Kp), Favorilerim, Uzay Bilgi Yarışması.
+Önerilip seçilmeyenler: Uzay Havası (NOAA Kp), Favorilerim, Uzay Bilgi Yarışması, Ötegezegen Keşifleri.
+
+### Yeni bölümler: 2. tur (26 Kasım 2026'da seçildi, bu sırayla)
+
+10. **Doğum Günü Fotoğrafın** (dal: `dogum-gunu`, yapılıyor): `dogumgunu.html/js`. Doğum tarihi → o günün APOD'u (`/api/apod?tarih=`). NASA'nın WordPress arşivinde 16 Haziran 1995'ten bugüne her gün var (kontrol edildi). 1995 öncesi doğanlar için APOD başladıktan sonraki ilk doğum günü; ‹ › ile yıllar arasında gezinme; 29 Şubat → artık olmayan yılda 28 Şubat. Backend: `nasa.APOD_BASLANGIC`, daha önceki tarih NASA'ya sorulmadan 404. APOD kartının HTML'i `app.js`'ten `ortak.js`'e taşındı (`apodHtml()`, `tarihYaz()`); ana sayfa da onu kullanıyor. Doğum tarihi sadece localStorage'da. Yeni ikon: `pasta`.
+11. **Gezegenlerde Yaşın** (dal: `yas`): sadece frontend. Her gezegende kaç yaşındasın, bir sonraki "gezegen doğum günün" ne zaman. Ağırlık sayfasının kardeşi.
+12. **Bugün Uzay Tarihinde** (dal: `uzay-tarihi`): kendi veri dosyamız (facts.json gibi; her gün için bir uzay tarihi olayı) + küçük API, ana sayfada kart.
+13. **Uzay Sondaları Nerede** (dal: `sondalar`): Voyager 1-2, New Horizons, Parker vb. Dünya'dan uzaklık, ışığın ulaşma süresi, canlı artan sayaç. Backend hesaplaması + yeni sayfa.
 
 ✅ **GRUPLU MENÜ** (dal: `menu`): Günlük · **Keşfet ▾** (Bu Gece, ISS, Dünya, Asteroitler) · Uzay Takvimi. `<details class="menu-grup">` ile yapıldı (JS'siz de açılır); ortak.js `menuGruplariniKur()` dışarı tıklayınca/Esc ile kapatır. Ağırlık da gruba eklendi. Gök Haritası da gruba eklendi. Yeni sayfa **bütün sayfalarda** `.menu-acilir` içine eklenmeli; grupta bir sayfa aktifse `<summary class="aktif">` olmalı. `tests/test_menu.py` unutulan sayfayı yakalar.
 
