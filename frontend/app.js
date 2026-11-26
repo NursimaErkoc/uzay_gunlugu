@@ -54,7 +54,49 @@ async function bilgiGetir() {
 }
 
 // ---------------------------------------------------------------------
-// 3) Güncel haberler
+// 3) Bugün uzay tarihinde
+//    Tarayıcı kendi tarihini gönderir: sunucunun saati farklı olabilir (Render UTC kullanıyor,
+//    Türkiye'de gece 01:00'de sunucu için hâlâ dün).
+// ---------------------------------------------------------------------
+async function uzayTarihiGetir() {
+  const kutu = document.getElementById("uzay-tarihi");
+  const simdi = new Date();
+  const bugun = `${simdi.getFullYear()}-${String(simdi.getMonth() + 1).padStart(2, "0")}-${String(simdi.getDate()).padStart(2, "0")}`;
+  try {
+    const cevap = await fetch(`/api/uzay-tarihi?tarih=${bugun}`);
+    const veri = await cevap.json();
+    if (!cevap.ok) throw new Error(veri.detail);
+
+    // Bugün olay yoksa en yakın gün: "3 gün sonra, 5 Eylül'de" / "2 gün önce, 24 Ağustos'ta"
+    const gunAdi = new Date(veri.tarih + "T12:00:00").toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
+    const baslik = veri.fark === 0 ? "Bugün Uzay Tarihinde" : "Yakında Uzay Tarihinde";
+    const altBaslik = veri.fark === 0
+      ? gunAdi
+      : `${gunAdi} · ${Math.abs(veri.fark)} gün ${veri.fark < 0 ? "önce" : "sonra"}`;
+
+    kutu.innerHTML = `
+      <div class="kart-ust">
+        <h2 class="bolum-basligi">${ikon("roket")}${baslik}</h2>
+        <span class="etiket">${altBaslik}</span>
+      </div>
+      <ol class="tarih-listesi">
+        ${veri.olaylar.map((o) => `
+          <li>
+            <div class="tarih-yil">${o.yil}<small>${o.yil_once} yıl önce</small></div>
+            <div>
+              <span class="tarih-kategori">${metinTemizle(o.kategori)}</span>
+              <p>${metinTemizle(o.metin)}</p>
+            </div>
+          </li>`).join("")}
+      </ol>`;
+    kutu.hidden = false;
+  } catch {
+    kutu.hidden = true;   // gelmezse kart hiç görünmesin
+  }
+}
+
+// ---------------------------------------------------------------------
+// 4) Güncel haberler
 // ---------------------------------------------------------------------
 async function haberleriGetir() {
   const liste = document.getElementById("haber-listesi");
@@ -88,7 +130,8 @@ function neZamanOnce(isoTarih) {
   return `${Math.round(dakika / (60 * 24))} gün önce`;
 }
 
-// Sayfa açılınca her şeyi getir (üçü aynı anda başlar, birbirini beklemez)
+// Sayfa açılınca her şeyi getir (hepsi aynı anda başlar, birbirini beklemez)
 bilgiGetir();
 apodGetir();
+uzayTarihiGetir();
 haberleriGetir();
