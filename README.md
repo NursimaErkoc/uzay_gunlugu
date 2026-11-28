@@ -2,7 +2,7 @@
 
 Her gün evrene yeni bir pencere açan, Türkçe bir uzay sitesi. Telefona uygulama olarak da kurulabilir.
 
-**Canlı site:** https://uzay-gunlugu.onrender.com
+**Canlı site:** https://uzaygunlugu.onrender.com
 
 ## Bölümler
 | Sayfa | Ne gösteriyor? |
