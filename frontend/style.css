@@ -202,8 +202,11 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .bolum-basligi .ikon { color: var(--vurgu); width: 1.35em; height: 1.35em; }
 
 /* ===== Form elemanları ===== */
-.tarih-secici { display: flex; align-items: center; gap: 8px; color: var(--soluk-yazi); font-size: 0.85rem; }
-.tarih-secici input {
+.tarih-secici { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--soluk-yazi); font-size: 0.85rem; }
+/* Gün · Ay · Yıl listeleri (ortak.js -> tarihSeciciKur) */
+.tarih-uclu { display: inline-flex; gap: 6px; }
+.tarih-secici input,
+.tarih-uclu select {
   background: var(--kart-ic);
   color: var(--yazi);
   border: 1px solid var(--kenar);
