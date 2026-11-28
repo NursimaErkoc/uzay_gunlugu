@@ -467,7 +467,115 @@ function menuGruplariniKur() {
   });
 }
 
+// ---------------------------------------------------------------------
+// 8) TARİH SEÇİCİ (Gün · Ay · Yıl)
+//   Tarayıcının kendi tarih kutusu (<input type="date">) biçimi TARAYICININ diline göre seçiyor:
+//   İngilizce bir Chrome "11/28/2026" (ay/gün/yıl) gösteriyor, sayfanın lang="tr" olması işe yaramıyor.
+//   Bu yüzden her tarih kutusunu gizleyip yerine üç açılır liste koyuyoruz: Gün · Ay · Yıl.
+//   Gizlenen kutu yine değeri ("2026-11-28") tutuyor ve "change" olayını veriyor; yani sayfaların
+//   kendi kodu (girdi.value, girdi.max, addEventListener("change")) hiç değişmeden çalışıyor.
+// ---------------------------------------------------------------------
+const AY_ADLARI = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+                   "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+
+function tarihSeciciKur(girdi) {
+  const ikiHane = (n) => String(n).padStart(2, "0");
+  const parcala = (iso) => iso.split("-").map(Number);               // "2026-11-28" -> [2026, 11, 28]
+  const yerelBugun = () => { const s = new Date(); return `${s.getFullYear()}-${ikiHane(s.getMonth() + 1)}-${ikiHane(s.getDate())}`; };
+
+  // Üç açılır liste; ilk seçenek boş ("Gün", "Ay", "Yıl" yazan) seçenek
+  const liste = (ad) => {
+    const s = document.createElement("select");
+    s.setAttribute("aria-label", ad);
+    s.dataset.bos = ad;
+    return s;
+  };
+  const gun = liste("Gün"), ay = liste("Ay"), yil = liste("Yıl");
+  const kutu = document.createElement("span");
+  kutu.className = "tarih-uclu";
+  kutu.append(gun, ay, yil);
+  girdi.type = "hidden";
+  girdi.after(kutu);
+
+  // Bir listenin seçeneklerini yeniden yaz. Önceki seçim artık izin verilen aralığın dışındaysa
+  // en yakın izinli değere çekilir (ör. 31 seçiliyken Şubat'a geçince 28/29; bu yıl seçilince gelecekteki ay -> bu ay).
+  function doldur(secim, secenekler) {
+    let istenen = Number(secim.value);
+    if (istenen && secenekler.length && !secenekler.some(([deger]) => deger === istenen)) {
+      istenen = istenen < secenekler[0][0] ? secenekler[0][0] : secenekler.at(-1)[0];
+    }
+    secim.innerHTML = `<option value="" disabled>${secim.dataset.bos}</option>` +
+      secenekler.map(([deger, yazi]) => `<option value="${deger}">${yazi}</option>`).join("");
+    secim.value = istenen ? String(istenen) : "";
+  }
+
+  // Sadece izin verilen tarihler seçilebilsin (min: HTML'deki, max: sayfanın verdiği ya da bugün)
+  function secenekleriYenile() {
+    const [y0, m0, d0] = parcala(girdi.min || "1900-01-01");
+    const [y1, m1, d1] = parcala(girdi.max || yerelBugun());
+
+    const yillar = [];
+    for (let y = y1; y >= y0; y--) yillar.push([y, y]);              // yeniden eskiye
+    doldur(yil, yillar);
+    const y = Number(yil.value);
+
+    const aylar = AY_ADLARI.map((ad, i) => [i + 1, ad])
+      .filter(([m]) => !(y === y0 && m < m0) && !(y === y1 && m > m1));
+    doldur(ay, aylar);
+    const m = Number(ay.value);
+
+    // Ayın gün sayısı (yıl seçilmediyse 2000 yılı sayılır: Şubat 29 gün)
+    const gunSayisi = m ? new Date(y || 2000, m, 0).getDate() : 31;
+    const gunler = [];
+    for (let d = 1; d <= gunSayisi; d++) {
+      if (y === y0 && m === m0 && d < d0) continue;
+      if (y === y1 && m === m1 && d > d1) continue;
+      gunler.push([d, d]);
+    }
+    doldur(gun, gunler);
+  }
+
+  // Gizli kutunun değerini listelere yansıt
+  const asilDeger = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  function goster() {
+    const iso = asilDeger.get.call(girdi);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      const [y, m, d] = parcala(iso);
+      secenekleriYenile();                     // önce yıl listesi hazır olsun
+      yil.value = String(y);
+      secenekleriYenile();                     // yıla göre aylar
+      ay.value = String(m);
+      secenekleriYenile();                     // aya göre günler
+      gun.value = String(d);
+    } else {
+      gun.value = ay.value = yil.value = "";
+      secenekleriYenile();
+    }
+  }
+
+  // Sayfa kodu girdi.value = "..." yazınca listeler de güncellensin
+  Object.defineProperty(girdi, "value", {
+    configurable: true,
+    get() { return asilDeger.get.call(this); },
+    set(deger) { asilDeger.set.call(this, deger); goster(); },
+  });
+
+  // Kullanıcı bir listeyi değiştirince: üçü de seçiliyse değeri yaz ve "change" olayını gönder
+  function secildi() {
+    secenekleriYenile();
+    if (!gun.value || !ay.value || !yil.value) return;
+    const iso = `${yil.value}-${ikiHane(ay.value)}-${ikiHane(gun.value)}`;
+    if (iso === asilDeger.get.call(girdi)) return;
+    asilDeger.set.call(girdi, iso);
+    girdi.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  [gun, ay, yil].forEach((s) => s.addEventListener("change", secildi));
+
+  goster();
+}
+
 sabitIkonlariYerlestir();
 yildizlariBaslat();
 uygulamaOzellikleriniBaslat();
 menuGruplariniKur();
+document.querySelectorAll('input[type="date"]').forEach(tarihSeciciKur);
