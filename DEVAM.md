@@ -14,11 +14,11 @@ NASA'nın günün fotoğrafını, günün uzay bilgisini, güncel uzay haberleri
 
 | | |
 |---|---|
-| **Canlı site** | https://uzay-gunlugu.onrender.com |
+| **Canlı site** | https://uzaygunlugu.onrender.com |
 | **GitHub** | https://github.com/NursimaErkoc/uzay_gunlugu (public) |
 | **Yerel klasör** | `C:\Users\hp\Desktop\uzay_günlüğü` |
-| **Sağlık/teşhis sayfası** | https://uzay-gunlugu.onrender.com/api/saglik |
-| **API dokümantasyonu** | https://uzay-gunlugu.onrender.com/docs |
+| **Sağlık/teşhis sayfası** | https://uzaygunlugu.onrender.com/api/saglik |
+| **API dokümantasyonu** | https://uzaygunlugu.onrender.com/docs |
 
 ## 2. Çalışma şekli (Claude için önemli)
 

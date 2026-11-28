@@ -3,7 +3,7 @@
 # Bu çağrı hem sunucuyu uyandırır hem de zamanı gelen hatırlatmaları gönderir.
 #
 # Gerekli GitHub "secret"ları (Repo > Settings > Secrets and variables > Actions):
-#   SITE_ADRESI        -> örn. https://uzay-gunlugu.onrender.com
+#   SITE_ADRESI        -> örn. https://uzaygunlugu.onrender.com
 #   YONETICI_ANAHTARI  -> Render'daki ile aynı anahtar
 
 name: Hatırlatma kontrolü
